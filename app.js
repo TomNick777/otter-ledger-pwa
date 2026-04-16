@@ -663,7 +663,7 @@ const ui = {
     ctx.clearRect(0, 0, width, height);
 
     if (data.length < 2) {
-      ctx.fillStyle = 'rgba(248,248,242,0.35)';
+      ctx.fillStyle = 'rgba(241,245,249,0.35)';
       ctx.font = '14px "DM Sans", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('暂无足够数据', width / 2, height / 2);
@@ -680,7 +680,7 @@ const ui = {
     const range = max - min || 1;
 
     // 背景
-    ctx.fillStyle = 'rgba(212,148,58,0.03)';
+    ctx.fillStyle = 'rgba(56,189,248,0.02)';
     ctx.fillRect(padding.left, padding.top, chartW, chartH);
 
     // 网格
@@ -706,14 +706,14 @@ const ui = {
     points.forEach(p => ctx.lineTo(p.x, p.y));
     ctx.lineTo(points[points.length - 1].x, height - padding.bottom);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(212,148,58,0.15)';
+    ctx.fillStyle = 'rgba(56,189,248,0.12)';
     ctx.fill();
 
     // 线条
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     points.forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = '#D4943A';
+    ctx.strokeStyle = '#38BDF8';
     ctx.lineWidth = 2.5;
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -722,15 +722,15 @@ const ui = {
     points.forEach(p => {
       ctx.beginPath();
       ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#1A1A2E';
+      ctx.fillStyle = '#0F172A';
       ctx.fill();
-      ctx.strokeStyle = '#D4943A';
+      ctx.strokeStyle = '#38BDF8';
       ctx.lineWidth = 2.5;
       ctx.stroke();
     });
 
     // X轴
-    ctx.fillStyle = 'rgba(248,248,242,0.5)';
+    ctx.fillStyle = 'rgba(241,245,249,0.5)';
     ctx.font = '12px "DM Sans", sans-serif';
     ctx.textAlign = 'center';
     data.forEach((d, i) => {
@@ -772,7 +772,7 @@ const ui = {
     const expenseX = padding.left + (chartW * 3) / 4 - barWidth / 2;
 
     // 收入柱
-    ctx.fillStyle = 'rgba(74,222,128,0.85)';
+    ctx.fillStyle = 'rgba(52,211,153,0.85)';
     ctx.beginPath();
     ctx.roundRect(incomeX, padding.top + chartH - incomeBarH, barWidth, incomeBarH, 6);
     ctx.fill();
@@ -784,7 +784,7 @@ const ui = {
     ctx.fill();
 
     // 标签
-    ctx.fillStyle = 'rgba(248,248,242,0.5)';
+    ctx.fillStyle = 'rgba(241,245,249,0.5)';
     ctx.font = '12px "DM Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('收入', padding.left + chartW / 4, height - 8);
@@ -792,7 +792,7 @@ const ui = {
 
     // 数值
     ctx.font = 'bold 13px "Outfit", sans-serif';
-    ctx.fillStyle = '#4ADE80';
+    ctx.fillStyle = '#34D399';
     ctx.fillText('¥' + income.toFixed(0), padding.left + chartW / 4, padding.top + chartH - incomeBarH - 10);
     ctx.fillStyle = '#F87171';
     ctx.fillText('¥' + expense.toFixed(0), padding.left + (chartW * 3) / 4, padding.top + chartH - expenseBarH - 10);

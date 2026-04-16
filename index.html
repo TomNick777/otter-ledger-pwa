@@ -17,45 +17,45 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     
     :root {
-      /* Warm Sand Palette */
-      --bg-primary: #1A1A2E;
-      --bg-secondary: #16213E;
-      --bg-card: rgba(255, 255, 255, 0.03);
-      --bg-card-hover: rgba(255, 255, 255, 0.06);
-      --bg-glass: rgba(255, 255, 255, 0.05);
-      --bg-glass-strong: rgba(255, 255, 255, 0.08);
+      /* Cool Blue Palette */
+      --bg-primary: #0F172A;
+      --bg-secondary: #1E293B;
+      --bg-card: rgba(255, 255, 255, 0.02);
+      --bg-card-hover: rgba(255, 255, 255, 0.05);
+      --bg-glass: rgba(255, 255, 255, 0.04);
+      --bg-glass-strong: rgba(255, 255, 255, 0.07);
       
-      /* Accent Colors */
-      --accent: #D4943A;
-      --accent-light: #E8B86D;
-      --accent-dark: #B8772A;
-      --accent-glow: rgba(212, 148, 58, 0.3);
+      /* Accent Colors - Cool Blue */
+      --accent: #38BDF8;
+      --accent-light: #7DD3FC;
+      --accent-dark: #0EA5E9;
+      --accent-glow: rgba(56, 189, 248, 0.25);
       
       /* Semantic Colors */
-      --success: #4ADE80;
-      --success-soft: rgba(74, 222, 128, 0.15);
+      --success: #34D399;
+      --success-soft: rgba(52, 211, 153, 0.15);
       --danger: #F87171;
       --danger-soft: rgba(248, 113, 113, 0.15);
       --warning: #FBBF24;
       --info: #60A5FA;
       
       /* Text Colors */
-      --text-primary: #F8F8F2;
-      --text-secondary: rgba(248, 248, 242, 0.6);
-      --text-muted: rgba(248, 248, 242, 0.35);
+      --text-primary: #F1F5F9;
+      --text-secondary: rgba(241, 245, 249, 0.65);
+      --text-muted: rgba(241, 245, 249, 0.35);
       
       /* Gradients */
-      --gradient-warm: linear-gradient(135deg, #D4943A 0%, #E8B86D 50%, #F5C9A8 100%);
-      --gradient-dark: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%);
-      --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-      --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      --gradient-warm: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #A78BFA 100%);
+      --gradient-dark: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+      --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+      --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
       
       /* Effects */
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
-      --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.25);
-      --shadow-lg: 0 16px 64px rgba(0, 0, 0, 0.35);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 16px 64px rgba(0, 0, 0, 0.4);
       --shadow-glow: 0 0 40px var(--accent-glow);
-      --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+      --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.08);
       
       /* Radius */
       --radius-sm: 8px;
@@ -88,8 +88,8 @@
       right: 0;
       bottom: 0;
       background: 
-        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(212, 148, 58, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(212, 148, 58, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(129, 140, 248, 0.04) 0%, transparent 50%),
         var(--gradient-dark);
       pointer-events: none;
       z-index: -1;
@@ -152,7 +152,7 @@
       font-size: 88px;
       margin-bottom: 24px;
       animation: float 3s ease-in-out infinite;
-      filter: drop-shadow(0 20px 40px rgba(212, 148, 58, 0.3));
+      filter: drop-shadow(0 20px 40px rgba(56, 189, 248, 0.3));
     }
     
     .login-title {
@@ -195,7 +195,7 @@
     
     .btn-primary {
       background: var(--gradient-warm);
-      color: #1A1A2E;
+      color: #0F172A;
       box-shadow: var(--shadow-md), 0 0 24px var(--accent-glow);
     }
     
@@ -273,7 +273,7 @@
     
     .logo-icon {
       font-size: 32px;
-      filter: drop-shadow(0 4px 12px rgba(212, 148, 58, 0.3));
+      filter: drop-shadow(0 4px 12px rgba(56, 189, 248, 0.3));
     }
     
     .logo-name {
@@ -310,7 +310,7 @@
       align-items: center;
       justify-content: center;
       font-size: 20px;
-      box-shadow: 0 4px 12px rgba(212, 148, 58, 0.25);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
     }
     
     .user-name {
@@ -364,9 +364,9 @@
     
     .nav-item.active {
       background: var(--gradient-warm);
-      color: #1A1A2E;
+      color: #0F172A;
       font-weight: 600;
-      box-shadow: 0 4px 16px rgba(212, 148, 58, 0.3);
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
     }
     
     .nav-item .icon {
@@ -377,7 +377,7 @@
     
     .nav-item .badge {
       margin-left: auto;
-      background: rgba(212, 148, 58, 0.2);
+      background: rgba(56, 189, 248, 0.2);
       color: var(--accent-light);
       font-size: 11px;
       font-weight: 700;
@@ -386,8 +386,8 @@
     }
     
     .nav-item.active .badge {
-      background: rgba(26, 26, 46, 0.2);
-      color: #1A1A2E;
+      background: rgba(15, 23, 42, 0.2);
+      color: #0F172A;
     }
     
     /* Sidebar Bottom */
@@ -508,15 +508,15 @@
       border-radius: var(--radius-md);
       font-size: 14px;
       font-weight: 600;
-      color: #1A1A2E;
+      color: #0F172A;
       cursor: pointer;
       transition: all var(--transition-fast);
-      box-shadow: 0 4px 16px rgba(212, 148, 58, 0.25);
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
     }
     
     .btn-add:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(212, 148, 58, 0.35);
+      box-shadow: 0 6px 24px rgba(56, 189, 248, 0.35);
     }
     
     /* Stats Grid */
@@ -550,8 +550,8 @@
     
     .stat-card:hover {
       transform: translateY(-4px);
-      border-color: rgba(212, 148, 58, 0.2);
-      box-shadow: var(--shadow-md), 0 0 40px rgba(212, 148, 58, 0.1);
+      border-color: rgba(56, 189, 248, 0.2);
+      box-shadow: var(--shadow-md), 0 0 40px rgba(56, 189, 248, 0.08);
     }
     
     .stat-card .label {
@@ -800,7 +800,7 @@
     
     .account-item:hover {
       background: var(--bg-glass-strong);
-      border-color: rgba(212, 148, 58, 0.2);
+      border-color: rgba(56, 189, 248, 0.2);
       transform: translateX(4px);
     }
     
@@ -1157,11 +1157,11 @@
       height: 60px;
       border-radius: 50%;
       background: var(--gradient-warm);
-      color: #1A1A2E;
+      color: #0F172A;
       border: none;
       font-size: 28px;
       cursor: pointer;
-      box-shadow: 0 8px 32px rgba(212, 148, 58, 0.4);
+      box-shadow: 0 8px 32px rgba(56, 189, 248, 0.4);
       transition: all var(--transition-base);
       display: flex;
       align-items: center;
@@ -1170,7 +1170,7 @@
     
     .fab button:hover {
       transform: scale(1.1) translateY(-4px);
-      box-shadow: 0 12px 40px rgba(212, 148, 58, 0.5);
+      box-shadow: 0 12px 40px rgba(56, 189, 248, 0.5);
     }
     
     .fab button:active {
