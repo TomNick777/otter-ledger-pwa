@@ -826,7 +826,8 @@ document.addEventListener('DOMContentLoaded', () => {
   dataStore.init();
   githubAuth.init();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(console.error);
+    const base = window.location.pathname.replace(/\/[^/]*$/, '');
+    navigator.serviceWorker.register(base + '/sw.js').catch(console.error);
   }
 });
 

@@ -1,11 +1,12 @@
-const CACHE_NAME = 'otter-ledger-v1';
+const CACHE_NAME = 'otter-ledger-v2';
+const BASE_URL = self.location.pathname.replace(/\/sw\.js$/, '');
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/app.js',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  BASE_URL + '/',
+  BASE_URL + '/index.html',
+  BASE_URL + '/app.js',
+  BASE_URL + '/manifest.json',
+  BASE_URL + '/icons/icon.svg'
 ];
 
 self.addEventListener('install', event => {
@@ -13,17 +14,25 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // 缓存命中则返回缓存，否则发起网络请求
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
+        if (response) return response;
+        return fetch(event.request).then(networkResponse => {
+          // 缓存新资源
+          if (networkResponse.ok) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        }).catch(() => {
+          // 网络失败时返回缓存的首页
+          return caches.match(BASE_URL + '/index.html');
+        });
       })
   );
 });
@@ -36,6 +45,6 @@ self.addEventListener('activate', event => {
           .filter(name => name !== CACHE_NAME)
           .map(name => caches.delete(name))
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
