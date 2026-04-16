@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#5A8A3C">
+  <title>海獭账本</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #5A8A3C;
+      --primary-dark: #4a7a2c;
+      --bg: #F5EFE6;
+      --card-bg: #FFFFFF;
+      --text: #333333;
+      --text-secondary: #666666;
+      --border: #E8E0D5;
+      --success: #4CAF50;
+      --danger: #f44336;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    
+    /* 登录页面 */
+    .login-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    
+    .login-page .logo {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    
+    .login-page h1 {
+      font-size: 28px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .login-page .subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+    
+    .btn {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    
+    /* 主应用 */
+    .app {
+      display: none;
+    }
+    
+    .app-header {
+      background: var(--primary);
+      color: white;
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .header-top h1 {
+      font-size: 20px;
+    }
+    
+    .sync-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .sync-btn.syncing {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .total-balance {
+      text-align: center;
+    }
+    
+    .total-balance .label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .total-balance .amount {
+      font-size: 36px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    
+    /* 页面内容 */
+    .page {
+      display: none;
+      padding: 15px;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    /* 账户卡片 */
+    .account-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .account-card:hover {
+      transform: translateY(-2px);
+    }
+    
+    .account-emoji {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .account-info {
+      flex: 1;
+    }
+    
+    .account-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .account-type {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .account-balance {
+      text-align: right;
+    }
+    
+    .account-balance .amount {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    /* 底部导航 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 20px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+    
+    .nav-item.active {
+      color: var(--primary);
+    }
+    
+    .nav-item .icon {
+      font-size: 24px;
+    }
+    
+    .nav-item .label {
+      font-size: 12px;
+    }
+    
+    /* 添加按钮 */
+    .fab {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(90,138,60,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+    }
+    
+    /* 表单样式 */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 16px;
+      background: var(--card-bg);
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    /* 记录列表 */
+    .record-item {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .record-emoji {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: var(--bg);
+    }
+    
+    .record-info {
+      flex: 1;
+    }
+    
+    .record-title {
+      font-weight: 500;
+    }
+    
+    .record-date {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .record-amount {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--success);
+    }
+    
+    /* 模态框 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: flex-end;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      width: 100%;
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-header h2 {
+      font-size: 20px;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state .icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    
+    /* 账户分配 */
+    .distribution-list {
+      margin-top: 10px;
+    }
+    
+    .distribution-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    
+    .distribution-item input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 16px;
+    }
+    
+    .distribution-item .account-name {
+      min-width: 80px;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 300;
+      display: none;
+    }
+    
+    .toast.show {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* 设置页面 */
+    .settings-item {
+      background: var(--card-bg);
+      padding: 16px;
+      margin-bottom: 1px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .settings-item:first-child {
+      border-radius: 12px 12px 0 0;
+    }
+    
+    .settings-item:last-child {
+      border-radius: 0 0 12px 12px;
+    }
+    
+    .settings-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    /* 响应式 */
+    @media (min-width: 768px) {
+      body {
+        max-width: 480px;
+        margin: 0 auto;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      }
+      
+      .bottom-nav {
+        max-width: 480px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .fab {
+        right: calc(50% - 220px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 登录页面 -->
+  <div class="login-page" id="loginPage">
+    <div class="logo">🦦</div>
+    <h1>海獭账本</h1>
+    <p class="subtitle">简单、纯粹的记账工具<br>数据存储在您的 GitHub 仓库</p>
+    <button class="btn btn-primary" onclick="githubAuth.login()">
+      <span>🔗</span> 使用 GitHub 登录
+    </button>
+    <p style="margin-top: 20px; font-size: 12px; color: var(--text-secondary);">
+      首次使用将自动创建私人仓库存储数据
+    </p>
+  </div>
+
+  <!-- 主应用 -->
+  <div class="app" id="app">
+    <header class="app-header">
+      <div class="header-top">
+        <h1>海獭账本</h1>
+        <button class="sync-btn" id="syncBtn" onclick="syncManager.sync()">
+          <span id="syncIcon">🔄</span> 同步
+        </button>
+      </div>
+      <div class="total-balance">
+        <div class="label">总资产</div>
+        <div class="amount" id="totalBalance">¥0.00</div>
+      </div>
+    </header>
+
+    <!-- 首页 - 账户列表 -->
+    <div class="page active" id="pageHome">
+      <div id="accountsList"></div>
+    </div>
+
+    <!-- 记录页面 -->
+    <div class="page" id="pageRecords">
+      <div id="recordsList"></div>
+    </div>
+
+    <!-- 设置页面 -->
+    <div class="page" id="pageSettings">
+      <div class="settings-item">
+        <div class="settings-label">
+          <span>👤</span>
+          <span id="githubUser">未登录</span>
+        </div>
+      </div>
+      <div class="settings-item" onclick="pageManager.showModal('accountModal')">
+        <div class="settings-label">
+          <span>💳</span>
+          <span>管理账户</span>
+        </div>
+        <span>›</span>
+      </div>
+      <div class="settings-item" onclick="syncManager.exportData()">
+        <div class="settings-label">
+          <span>💾</span>
+          <span>导出数据</span>
+        </div>
+        <span>›</span>
+      </div>
+      <div class="settings-item" onclick="githubAuth.logout()">
+        <div class="settings-label">
+          <span>🚪</span>
+          <span style="color: var(--danger);">退出登录</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" onclick="pageManager.switchPage('home')">
+        <span class="icon">🏠</span>
+        <span class="label">首页</span>
+      </div>
+      <div class="nav-item" onclick="pageManager.switchPage('records')">
+        <span class="icon">📋</span>
+        <span class="label">记录</span>
+      </div>
+      <div class="nav-item" onclick="pageManager.switchPage('settings')">
+        <span class="icon">⚙️</span>
+        <span class="label">设置</span>
+      </div>
+    </nav>
+
+    <!-- 添加按钮 -->
+    <button class="fab" onclick="pageManager.showModal('incomeModal')">+</button>
+  </div>
+
+  <!-- 记收入模态框 -->
+  <div class="modal" id="incomeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>记收入</h2>
+        <button class="modal-close" onclick="pageManager.hideModal('incomeModal')">×</button>
+      </div>
+      <form id="incomeForm" onsubmit="incomeManager.submit(event)">
+        <div class="form-group">
+          <label>金额</label>
+          <input type="number" id="incomeAmount" step="0.01" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label>来源</label>
+          <input type="text" id="incomeSource" placeholder="例如：工资、奖金" required>
+        </div>
+        <div class="form-group">
+          <label>日期</label>
+          <input type="date" id="incomeDate" required>
+        </div>
+        <div class="form-group">
+          <label>分配到账户</label>
+          <div class="distribution-list" id="distributionList"></div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">保存</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 账户管理模态框 -->
+  <div class="modal" id="accountModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>管理账户</h2>
+        <button class="modal-close" onclick="pageManager.hideModal('accountModal')">×</button>
+      </div>
+      <div id="manageAccountsList"></div>
+      <form id="addAccountForm" onsubmit="accountManager.add(event)" style="margin-top: 20px;">
+        <div class="form-group">
+          <label>添加新账户</label>
+          <input type="text" id="newAccountName" placeholder="账户名称" required>
+        </div>
+        <div class="form-group">
+          <select id="newAccountType">
+            <option value="cash">💵 现金</option>
+            <option value="bank">🏦 银行卡</option>
+            <option value="alipay">💙 支付宝</option>
+            <option value="wechat">💚 微信</option>
+            <option value="investment">📈 投资</option>
+            <option value="other">📦 其他</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-secondary" style="width: 100%;">添加账户</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
