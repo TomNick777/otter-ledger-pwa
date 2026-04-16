@@ -663,8 +663,8 @@ const ui = {
     ctx.clearRect(0, 0, width, height);
 
     if (data.length < 2) {
-      ctx.fillStyle = '#A0A0A0';
-      ctx.font = '13px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(248,248,242,0.35)';
+      ctx.font = '14px "DM Sans", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('暂无足够数据', width / 2, height / 2);
       return;
@@ -680,11 +680,11 @@ const ui = {
     const range = max - min || 1;
 
     // 背景
-    ctx.fillStyle = 'rgba(232,168,124,0.04)';
+    ctx.fillStyle = 'rgba(212,148,58,0.03)';
     ctx.fillRect(padding.left, padding.top, chartW, chartH);
 
     // 网格
-    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 3; i++) {
       const y = padding.top + (chartH / 3) * i;
@@ -706,14 +706,14 @@ const ui = {
     points.forEach(p => ctx.lineTo(p.x, p.y));
     ctx.lineTo(points[points.length - 1].x, height - padding.bottom);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(232,168,124,0.15)';
+    ctx.fillStyle = 'rgba(212,148,58,0.15)';
     ctx.fill();
 
     // 线条
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     points.forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = '#E8A87C';
+    ctx.strokeStyle = '#D4943A';
     ctx.lineWidth = 2.5;
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -721,17 +721,17 @@ const ui = {
     // 点
     points.forEach(p => {
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#1A1A2E';
       ctx.fill();
-      ctx.strokeStyle = '#E8A87C';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#D4943A';
+      ctx.lineWidth = 2.5;
       ctx.stroke();
     });
 
     // X轴
-    ctx.fillStyle = '#7A7A7A';
-    ctx.font = '11px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(248,248,242,0.5)';
+    ctx.font = '12px "DM Sans", sans-serif';
     ctx.textAlign = 'center';
     data.forEach((d, i) => {
       const label = d.label.slice(5).replace('-', '/');
@@ -772,30 +772,30 @@ const ui = {
     const expenseX = padding.left + (chartW * 3) / 4 - barWidth / 2;
 
     // 收入柱
-    ctx.fillStyle = 'rgba(109,190,109,0.8)';
+    ctx.fillStyle = 'rgba(74,222,128,0.85)';
     ctx.beginPath();
     ctx.roundRect(incomeX, padding.top + chartH - incomeBarH, barWidth, incomeBarH, 6);
     ctx.fill();
 
     // 支出柱
-    ctx.fillStyle = 'rgba(229,115,115,0.8)';
+    ctx.fillStyle = 'rgba(248,113,113,0.85)';
     ctx.beginPath();
     ctx.roundRect(expenseX, padding.top + chartH - expenseBarH, barWidth, expenseBarH, 6);
     ctx.fill();
 
     // 标签
-    ctx.fillStyle = '#7A7A7A';
-    ctx.font = '11px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(248,248,242,0.5)';
+    ctx.font = '12px "DM Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('收入', padding.left + chartW / 4, height - 8);
     ctx.fillText('支出', padding.left + (chartW * 3) / 4, height - 8);
 
     // 数值
-    ctx.font = 'bold 12px Inter, sans-serif';
-    ctx.fillStyle = '#6DBE6D';
-    ctx.fillText('¥' + income.toFixed(0), padding.left + chartW / 4, padding.top + chartH - incomeBarH - 8);
-    ctx.fillStyle = '#E57373';
-    ctx.fillText('¥' + expense.toFixed(0), padding.left + (chartW * 3) / 4, padding.top + chartH - expenseBarH - 8);
+    ctx.font = 'bold 13px "Outfit", sans-serif';
+    ctx.fillStyle = '#4ADE80';
+    ctx.fillText('¥' + income.toFixed(0), padding.left + chartW / 4, padding.top + chartH - incomeBarH - 10);
+    ctx.fillStyle = '#F87171';
+    ctx.fillText('¥' + expense.toFixed(0), padding.left + (chartW * 3) / 4, padding.top + chartH - expenseBarH - 10);
   },
 
   showToast(message) {
