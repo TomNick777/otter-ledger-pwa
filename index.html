@@ -9,7 +9,6 @@
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
     :root {
       --primary: #5A8A3C;
       --primary-dark: #4a7a2c;
@@ -21,7 +20,6 @@
       --success: #4CAF50;
       --danger: #f44336;
     }
-    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
@@ -29,8 +27,6 @@
       min-height: 100vh;
       padding-bottom: 80px;
     }
-    
-    /* 登录页面 */
     .login-page {
       display: flex;
       flex-direction: column;
@@ -40,23 +36,9 @@
       padding: 40px 20px;
       text-align: center;
     }
-    
-    .login-page .logo {
-      font-size: 80px;
-      margin-bottom: 20px;
-    }
-    
-    .login-page h1 {
-      font-size: 28px;
-      color: var(--primary);
-      margin-bottom: 10px;
-    }
-    
-    .login-page .subtitle {
-      color: var(--text-secondary);
-      margin-bottom: 40px;
-    }
-    
+    .login-page .logo { font-size: 80px; margin-bottom: 20px; }
+    .login-page h1 { font-size: 28px; color: var(--primary); margin-bottom: 10px; }
+    .login-page .subtitle { color: var(--text-secondary); margin-bottom: 40px; }
     .btn {
       padding: 14px 32px;
       border: none;
@@ -68,27 +50,10 @@
       align-items: center;
       gap: 8px;
     }
-    
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-    
-    .btn-secondary {
-      background: white;
-      color: var(--primary);
-      border: 2px solid var(--primary);
-    }
-    
-    /* 主应用 */
-    .app {
-      display: none;
-    }
-    
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: white; color: var(--primary); border: 2px solid var(--primary); }
+    .app { display: none; }
     .app-header {
       background: var(--primary);
       color: white;
@@ -97,18 +62,13 @@
       top: 0;
       z-index: 100;
     }
-    
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
     }
-    
-    .header-top h1 {
-      font-size: 20px;
-    }
-    
+    .header-top h1 { font-size: 20px; }
     .sync-btn {
       background: rgba(255,255,255,0.2);
       border: none;
@@ -118,39 +78,58 @@
       cursor: pointer;
       font-size: 14px;
     }
-    
-    .sync-btn.syncing {
-      animation: spin 1s linear infinite;
-    }
-    
+    .sync-btn.syncing { animation: spin 1s linear infinite; }
     @keyframes spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    .total-balance { text-align: center; }
+    .total-balance .label { font-size: 14px; opacity: 0.9; }
+    .total-balance .amount { font-size: 36px; font-weight: bold; margin-top: 5px; }
     
-    .total-balance {
-      text-align: center;
+    /* 折线图 */
+    .chart-container {
+      background: white;
+      border-radius: 12px;
+      margin: 15px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    
-    .total-balance .label {
+    .chart-title {
       font-size: 14px;
-      opacity: 0.9;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+    #chartCanvas {
+      width: 100%;
+      height: 160px;
     }
     
-    .total-balance .amount {
-      font-size: 36px;
-      font-weight: bold;
-      margin-top: 5px;
+    /* 月度统计 */
+    .monthly-stats {
+      display: flex;
+      justify-content: space-around;
+      background: white;
+      border-radius: 12px;
+      margin: 0 15px 15px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
+    .stat-item { text-align: center; }
+    .stat-item .stat-label { font-size: 12px; color: var(--text-secondary); }
+    .stat-item .stat-value { font-size: 18px; font-weight: 600; margin-top: 4px; }
+    .stat-item .stat-value.income { color: var(--success); }
+    .stat-item .stat-value.expense { color: var(--danger); }
+    .stat-item .stat-value.balance { color: var(--primary); }
     
     /* 页面内容 */
-    .page {
-      display: none;
-      padding: 15px;
-    }
-    
-    .page.active {
-      display: block;
+    .page { display: none; padding: 15px; }
+    .page.active { display: block; }
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--text);
     }
     
     /* 账户卡片 */
@@ -166,11 +145,7 @@
       cursor: pointer;
       transition: transform 0.2s;
     }
-    
-    .account-card:hover {
-      transform: translateY(-2px);
-    }
-    
+    .account-card:hover { transform: translateY(-2px); }
     .account-emoji {
       width: 48px;
       height: 48px;
@@ -180,30 +155,11 @@
       justify-content: center;
       font-size: 24px;
     }
-    
-    .account-info {
-      flex: 1;
-    }
-    
-    .account-name {
-      font-weight: 600;
-      font-size: 16px;
-    }
-    
-    .account-type {
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-    
-    .account-balance {
-      text-align: right;
-    }
-    
-    .account-balance .amount {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--primary);
-    }
+    .account-info { flex: 1; }
+    .account-name { font-weight: 600; font-size: 16px; }
+    .account-type { font-size: 12px; color: var(--text-secondary); }
+    .account-balance { text-align: right; }
+    .account-balance .amount { font-size: 18px; font-weight: 600; color: var(--primary); }
     
     /* 底部导航 */
     .bottom-nav {
@@ -218,7 +174,6 @@
       box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
       z-index: 100;
     }
-    
     .nav-item {
       display: flex;
       flex-direction: column;
@@ -229,24 +184,22 @@
       color: var(--text-secondary);
       transition: color 0.2s;
     }
+    .nav-item.active { color: var(--primary); }
+    .nav-item .icon { font-size: 24px; }
+    .nav-item .label { font-size: 12px; }
     
-    .nav-item.active {
-      color: var(--primary);
-    }
-    
-    .nav-item .icon {
-      font-size: 24px;
-    }
-    
-    .nav-item .label {
-      font-size: 12px;
-    }
-    
-    /* 添加按钮 */
-    .fab {
+    /* 添加按钮组 */
+    .fab-group {
       position: fixed;
       bottom: 90px;
       right: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      z-index: 99;
+    }
+    .fab {
       width: 56px;
       height: 56px;
       border-radius: 50%;
@@ -259,23 +212,36 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 99;
+    }
+    .fab-mini {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-size: 22px;
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .fab-label {
+      background: white;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+    .fab-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     /* 表单样式 */
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: var(--text);
-    }
-    
-    .form-group input,
-    .form-group select {
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+    .form-group input, .form-group select {
       width: 100%;
       padding: 14px;
       border: 1px solid var(--border);
@@ -283,9 +249,7 @@
       font-size: 16px;
       background: var(--card-bg);
     }
-    
-    .form-group input:focus,
-    .form-group select:focus {
+    .form-group input:focus, .form-group select:focus {
       outline: none;
       border-color: var(--primary);
     }
@@ -300,7 +264,6 @@
       align-items: center;
       gap: 12px;
     }
-    
     .record-emoji {
       width: 40px;
       height: 40px;
@@ -311,25 +274,12 @@
       font-size: 20px;
       background: var(--bg);
     }
-    
-    .record-info {
-      flex: 1;
-    }
-    
-    .record-title {
-      font-weight: 500;
-    }
-    
-    .record-date {
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-    
-    .record-amount {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--success);
-    }
+    .record-info { flex: 1; }
+    .record-title { font-weight: 500; }
+    .record-date { font-size: 12px; color: var(--text-secondary); }
+    .record-amount { font-size: 18px; font-weight: 600; }
+    .record-amount.income { color: var(--success); }
+    .record-amount.expense { color: var(--danger); }
     
     /* 模态框 */
     .modal {
@@ -343,11 +293,7 @@
       z-index: 200;
       align-items: flex-end;
     }
-    
-    .modal.active {
-      display: flex;
-    }
-    
+    .modal.active { display: flex; }
     .modal-content {
       background: var(--card-bg);
       width: 100%;
@@ -357,23 +303,17 @@
       overflow-y: auto;
       animation: slideUp 0.3s ease;
     }
-    
     @keyframes slideUp {
       from { transform: translateY(100%); }
       to { transform: translateY(0); }
     }
-    
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
     }
-    
-    .modal-header h2 {
-      font-size: 20px;
-    }
-    
+    .modal-header h2 { font-size: 20px; }
     .modal-close {
       background: none;
       border: none;
@@ -383,22 +323,11 @@
     }
     
     /* 空状态 */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-secondary);
-    }
-    
-    .empty-state .icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-    }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
     
     /* 账户分配 */
-    .distribution-list {
-      margin-top: 10px;
-    }
-    
+    .distribution-list { margin-top: 10px; }
     .distribution-item {
       display: flex;
       align-items: center;
@@ -408,17 +337,13 @@
       border-radius: 10px;
       margin-bottom: 8px;
     }
-    
     .distribution-item input {
       flex: 1;
       border: none;
       background: transparent;
       font-size: 16px;
     }
-    
-    .distribution-item .account-name {
-      min-width: 80px;
-    }
+    .distribution-item .account-name { min-width: 80px; }
     
     /* Toast */
     .toast {
@@ -434,16 +359,8 @@
       z-index: 300;
       display: none;
     }
-    
-    .toast.show {
-      display: block;
-      animation: fadeIn 0.2s ease;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    .toast.show { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     
     /* 设置页面 */
     .settings-item {
@@ -455,20 +372,9 @@
       align-items: center;
       cursor: pointer;
     }
-    
-    .settings-item:first-child {
-      border-radius: 12px 12px 0 0;
-    }
-    
-    .settings-item:last-child {
-      border-radius: 0 0 12px 12px;
-    }
-    
-    .settings-label {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .settings-item:first-child { border-radius: 12px 12px 0 0; }
+    .settings-item:last-child { border-radius: 0 0 12px 12px; }
+    .settings-label { display: flex; align-items: center; gap: 12px; }
     
     /* 响应式 */
     @media (min-width: 768px) {
@@ -477,15 +383,10 @@
         margin: 0 auto;
         box-shadow: 0 0 20px rgba(0,0,0,0.1);
       }
-      
       .bottom-nav {
         max-width: 480px;
         left: 50%;
         transform: translateX(-50%);
-      }
-      
-      .fab {
-        right: calc(50% - 220px);
       }
     }
   </style>
@@ -519,18 +420,43 @@
       </div>
     </header>
 
-    <!-- 首页 - 账户列表 -->
+    <!-- 首页 -->
     <div class="page active" id="pageHome">
+      <!-- 折线图 -->
+      <div class="chart-container">
+        <div class="chart-title">📈 近6个月资产走势</div>
+        <canvas id="chartCanvas"></canvas>
+      </div>
+      
+      <!-- 月度统计 -->
+      <div class="monthly-stats">
+        <div class="stat-item">
+          <div class="stat-label">本月收入</div>
+          <div class="stat-value income" id="monthIncome">+¥0.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">本月支出</div>
+          <div class="stat-value expense" id="monthExpense">-¥0.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">本月结余</div>
+          <div class="stat-value balance" id="monthBalance">+¥0.00</div>
+        </div>
+      </div>
+      
+      <div class="page-title">💳 我的账户</div>
       <div id="accountsList"></div>
     </div>
 
     <!-- 记录页面 -->
     <div class="page" id="pageRecords">
+      <div class="page-title">📋 收支记录</div>
       <div id="recordsList"></div>
     </div>
 
     <!-- 设置页面 -->
     <div class="page" id="pageSettings">
+      <div class="page-title">⚙️ 设置</div>
       <div class="settings-item">
         <div class="settings-label">
           <span>👤</span>
@@ -575,15 +501,24 @@
       </div>
     </nav>
 
-    <!-- 添加按钮 -->
-    <button class="fab" onclick="pageManager.showModal('incomeModal')">+</button>
+    <!-- 添加按钮组 -->
+    <div class="fab-group">
+      <div class="fab-row">
+        <div class="fab-label" onclick="pageManager.showModal('expenseModal')">记支出</div>
+        <button class="fab fab-mini" onclick="pageManager.showModal('expenseModal')">💸</button>
+      </div>
+      <div class="fab-row">
+        <div class="fab-label" onclick="pageManager.showModal('incomeModal')">记收入</div>
+        <button class="fab" onclick="pageManager.showModal('incomeModal')">+</button>
+      </div>
+    </div>
   </div>
 
   <!-- 记收入模态框 -->
   <div class="modal" id="incomeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>记收入</h2>
+        <h2>💰 记收入</h2>
         <button class="modal-close" onclick="pageManager.hideModal('incomeModal')">×</button>
       </div>
       <form id="incomeForm" onsubmit="incomeManager.submit(event)">
@@ -608,28 +543,63 @@
     </div>
   </div>
 
+  <!-- 记支出模态框 -->
+  <div class="modal" id="expenseModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>💸 记支出</h2>
+        <button class="modal-close" onclick="pageManager.hideModal('expenseModal')">×</button>
+      </div>
+      <form id="expenseForm" onsubmit="expenseManager.submit(event)">
+        <div class="form-group">
+          <label>金额</label>
+          <input type="number" id="expenseAmount" step="0.01" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label>说明</label>
+          <input type="text" id="expenseDesc" placeholder="例如：午餐、购物" required>
+        </div>
+        <div class="form-group">
+          <label>日期</label>
+          <input type="date" id="expenseDate" required>
+        </div>
+        <div class="form-group">
+          <label>从账户扣款</label>
+          <select id="expenseAccount" required></select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">保存</button>
+      </form>
+    </div>
+  </div>
+
   <!-- 账户管理模态框 -->
   <div class="modal" id="accountModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>管理账户</h2>
+        <h2>💳 管理账户</h2>
         <button class="modal-close" onclick="pageManager.hideModal('accountModal')">×</button>
       </div>
       <div id="manageAccountsList"></div>
-      <form id="addAccountForm" onsubmit="accountManager.add(event)" style="margin-top: 20px;">
+      <form id="addAccountForm" onsubmit="accountManager.add(event)" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
         <div class="form-group">
           <label>添加新账户</label>
           <input type="text" id="newAccountName" placeholder="账户名称" required>
         </div>
         <div class="form-group">
+          <label>账户类型</label>
           <select id="newAccountType">
             <option value="cash">💵 现金</option>
             <option value="bank">🏦 银行卡</option>
             <option value="alipay">💙 支付宝</option>
             <option value="wechat">💚 微信</option>
             <option value="investment">📈 投资</option>
+            <option value="credit">💳 信用卡</option>
             <option value="other">📦 其他</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>初始余额</label>
+          <input type="number" id="newAccountInitialBalance" step="0.01" placeholder="0.00" value="0">
         </div>
         <button type="submit" class="btn btn-secondary" style="width: 100%;">添加账户</button>
       </form>
