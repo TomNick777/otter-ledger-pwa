@@ -636,6 +636,29 @@
     </div>
   </div>
 
+  <!-- Token 输入弹窗 -->
+  <div class="modal" id="tokenModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔐 GitHub 登录</h2>
+        <button class="modal-close" onclick="document.getElementById('tokenModal').style.display='none'">×</button>
+      </div>
+      <div style="padding: 20px 0;">
+        <div class="form-group">
+          <label>Personal Access Token</label>
+          <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxx" style="font-family: monospace;">
+          <small style="color: var(--text-secondary); display: block; margin-top: 8px; line-height: 1.5;">
+            1. 访问 <a href="https://github.com/settings/tokens" target="_blank" style="color: var(--primary);">github.com/settings/tokens</a><br>
+            2. 点击 "Generate new token (classic)"<br>
+            3. 勾选 "repo" 权限<br>
+            4. 复制生成的 token 粘贴到上方
+          </small>
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="githubAuth.submitToken()">登录</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 

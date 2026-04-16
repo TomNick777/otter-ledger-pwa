@@ -103,49 +103,44 @@ const githubAuth = {
     this.token = localStorage.getItem('github-token');
     this.user = JSON.parse(localStorage.getItem('github-user') || 'null');
     
-    // 检查 URL 中的 code 参数（OAuth 回调）
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    if (code) {
-      this.handleCallback(code);
-      return;
-    }
-    
     if (this.token && this.user) {
       this.showApp();
     }
   },
   
   login() {
-    // 使用 GitHub OAuth
-    const scope = 'repo';
-    const authUrl = `https://github.com/login/oauth/authorize?client_id=${CONFIG.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(CONFIG.REDIRECT_URI)}&scope=${scope}`;
-    window.location.href = authUrl;
+    // 显示 Token 输入弹窗
+    document.getElementById('tokenModal').style.display = 'flex';
   },
   
-  async handleCallback(code) {
-    ui.showToast('登录中...');
+  async submitToken() {
+    const token = document.getElementById('tokenInput').value.trim();
+    if (!token) {
+      ui.showToast('请输入 Token');
+      return;
+    }
+    
+    ui.showToast('验证中...');
     try {
-      // 注意：实际项目中需要一个后端服务来交换 code 获取 token
-      // 这里使用 GitHub Device Flow 或让用户手动输入 token
-      // 简化版：提示用户手动创建 token
-      const token = prompt('请输入您的 GitHub Personal Access Token（需要 repo 权限）：');
-      if (!token) return;
-      
-      this.token = token;
-      localStorage.setItem('github-token', token);
-      
-      // 获取用户信息
+      // 验证 token 并获取用户信息
       const userRes = await fetch('https://api.github.com/user', {
         headers: { 'Authorization': `token ${token}` }
       });
+      
+      if (!userRes.ok) {
+        ui.showToast('Token 无效，请检查后重试');
+        return;
+      }
+      
       this.user = await userRes.json();
+      this.token = token;
+      localStorage.setItem('github-token', token);
       localStorage.setItem('github-user', JSON.stringify(this.user));
       
-      // 清理 URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      document.getElementById('tokenModal').style.display = 'none';
+      document.getElementById('tokenInput').value = '';
       
-      ui.showToast('登录成功！');
+      ui.showToast('登录成功！欢迎 ' + this.user.login);
       this.showApp();
       
       // 初始化仓库并同步
