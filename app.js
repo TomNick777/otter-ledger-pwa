@@ -444,6 +444,18 @@ const accountManager = {
     if (githubAuth.token) syncManager.sync();
   },
 
+  quickUpdate(id) {
+    const input = document.getElementById('balanceInput_' + id);
+    const newBalance = parseFloat(input.value);
+    if (isNaN(newBalance)) { ui.showToast('请输入有效金额'); return; }
+    dataStore.updateAccountBalance(id, newBalance);
+    document.getElementById('balanceDisplay_' + id).textContent = '¥' + newBalance.toFixed(2);
+    input.value = '';
+    ui.render();
+    if (githubAuth.token) syncManager.sync();
+    ui.showToast('余额已更新');
+  },
+
   updateBalance(id) {
     const acc = dataStore.accounts.find(a => a.id === id);
     if (!acc) return;
@@ -486,13 +498,19 @@ const ui = {
       return;
     }
     list.innerHTML = dataStore.accounts.map(acc => `
-      <div class="account-card" onclick="ui.showAccountDetail('${acc.id}')">
+      <div class="account-card">
         <div class="account-emoji" style="background:${this.getAccountColor(acc.type)}">${acc.emoji}</div>
         <div class="account-info">
           <div class="account-name">${acc.name}</div>
           <div class="account-type">${this.getAccountTypeName(acc.type)}</div>
         </div>
-        <div class="account-balance"><div class="amount">¥${acc.balance.toFixed(2)}</div></div>
+        <div class="account-balance">
+          <div class="amount" id="balanceDisplay_${acc.id}">¥${acc.balance.toFixed(2)}</div>
+          <div style="display:flex;gap:5px;margin-top:8px;">
+            <input type="number" step="0.01" id="balanceInput_${acc.id}" placeholder="新余额" style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+            <button onclick="accountManager.quickUpdate('${acc.id}')" style="padding:6px 10px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">更新</button>
+          </div>
+        </div>
       </div>
     `).join('');
   },
