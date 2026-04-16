@@ -9,7 +9,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     :root {
       --primary: #E8A87C;
       --primary-light: #F5C9A8;
@@ -41,6 +45,8 @@
       background: var(--bg);
       color: var(--text);
       overflow: hidden;
+      margin: 0;
+      padding: 0;
     }
 
     /* ===== 登录页面 ===== */
@@ -79,14 +85,13 @@
     .layout {
       display: grid;
       grid-template-columns: 1fr 2fr 1fr;
-      flex: 1;
+      height: 100%;
       width: 100%;
       overflow: hidden;
     }
 
     /* ===== 左侧边栏 ===== */
     .sidebar {
-      flex: 1;
       min-width: 200px;
       background: var(--sidebar-bg);
       display: flex;
@@ -390,7 +395,6 @@
 
     /* ===== 右侧边栏 ===== */
     .right-sidebar {
-      flex: 1;
       min-width: 240px;
       background: var(--bg-warm);
       border-left: 1px solid var(--border);
