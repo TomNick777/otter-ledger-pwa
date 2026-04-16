@@ -206,7 +206,41 @@
       overflow-y: auto;
       padding: 28px 32px;
       background: var(--bg);
+      min-width: 0;
     }
+
+    /* ===== 响应式大屏优化 ===== */
+    @media (min-width: 1400px) {
+      .main-content { padding: 36px 48px; }
+      .stats-row { gap: 24px; }
+      .charts-grid { gap: 28px; }
+      .stat-card { padding: 24px 28px; }
+      .stat-card .value { font-size: 32px; }
+      .card { padding: 26px 28px; }
+    }
+    @media (min-width: 1600px) {
+      .main-content { padding: 40px 64px; }
+      .stat-card .value { font-size: 36px; }
+      .card-title { font-size: 16px; }
+      .main-title h2 { font-size: 26px; }
+    }
+    @media (min-width: 2000px) {
+      .sidebar { width: 280px; min-width: 280px; }
+      .right-sidebar { width: 340px; min-width: 340px; }
+      .main-content { padding: 48px 80px; }
+      .stat-card .value { font-size: 40px; }
+      .stat-card { padding: 28px 32px; }
+    }
+
+    /* 手机端：收起侧边栏 */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .right-sidebar { display: none; }
+      .main-content { padding: 16px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
     .main-header {
       display: flex;
       justify-content: space-between;
@@ -937,8 +971,13 @@
     </div>
   </div>
 
-  <!-- Toast -->
+<!-- Toast -->
   <div class="toast" id="toast"></div>
+
+  <!-- 右侧悬浮记收入按钮 -->
+  <div style="position:fixed;bottom:28px;right:28px;z-index:999;">
+    <button onclick="pageManager.showAddModal()" style="width:54px;height:54px;border-radius:50%;background:var(--primary);color:white;border:none;font-size:30px;cursor:pointer;box-shadow:0 4px 16px rgba(232,168,124,0.45);display:flex;align-items:center;justify-content:center;">+</button>
+  </div>
 
   <script src="app.js"></script>
 </body>
