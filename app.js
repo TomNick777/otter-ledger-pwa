@@ -24,26 +24,28 @@ const dataStore = {
   // 账户动态日志
   activityLog: [],
 
-  init() {
-    const saved = localStorage.getItem('otter-ledger-data');
+  init(skipLocal = false) {
     this.accounts = [];
     this.balanceSnapshots = [];
     this.incomeRecords = [];
     this.transferRecords = [];
     this.activityLog = [];
-    if (saved) {
-      const data = JSON.parse(saved);
-      this.accounts = data.accounts || [];
-      this.balanceSnapshots = data.balanceSnapshots || [];
-      this.incomeRecords = data.incomeRecords || [];
-      this.transferRecords = data.transferRecords || [];
-      this.activityLog = data.activityLog || [];
-      // 确保所有账户有 sortOrder
-      this.accounts.forEach((acc, i) => {
-        if (acc.sortOrder === undefined) acc.sortOrder = i;
-      });
-      this.accounts.sort((a, b) => a.sortOrder - b.sortOrder);
+    if (!skipLocal) {
+      const saved = localStorage.getItem('otter-ledger-data');
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.accounts = data.accounts || [];
+        this.balanceSnapshots = data.balanceSnapshots || [];
+        this.incomeRecords = data.incomeRecords || [];
+        this.transferRecords = data.transferRecords || [];
+        this.activityLog = data.activityLog || [];
+      }
     }
+    // 确保所有账户有 sortOrder
+    this.accounts.forEach((acc, i) => {
+      if (acc.sortOrder === undefined) acc.sortOrder = i;
+    });
+    this.accounts.sort((a, b) => a.sortOrder - b.sortOrder);
   },
 
   save() {
@@ -303,8 +305,8 @@ const githubAuth = {
       document.getElementById('sidebarUserName').textContent = this.user.login;
       document.getElementById('settingsUser').textContent = 'GitHub: ' + this.user.login;
     }
-    dataStore.init();
-    // 先等 GitHub 数据拉回来再渲染，避免新设备看到空白
+    // 登录状态：跳过本地缓存，直接从 GitHub 拉取最新数据
+    dataStore.init(true);
     await this._renderAfterSync();
   },
 
@@ -402,6 +404,8 @@ const syncManager = {
           await this.pushToGitHub(localData, 'Initial data from local');
         }
       }
+      // 同步成功后，将最新数据写入 localStorage 作为离线备份
+      dataStore.save();
       ui.render();
       ui.showToast('同步完成 ✓');
     } catch (err) {
@@ -455,18 +459,13 @@ const syncManager = {
     if (!cloud || !cloud.accounts) return local;
     if (!local || !local.accounts || local.accounts.length === 0) return cloud;
     
+    // 两边都有数据时，用时间戳判断谁更新
     const cloudTime = cloud.lastModified || (cloud.exportTime ? new Date(cloud.exportTime).getTime() : 0);
     const localTime = local.lastModified || (local.exportTime ? new Date(local.exportTime).getTime() : 0);
     
-    if (cloudTime >= localTime) {
-      return cloud;
-    }
-    
-    const timeDiff = localTime - cloudTime;
-    if (timeDiff > 5 * 60 * 1000) {
-      return local;
-    }
-    
+    // 本地数据比云端新超过5分钟，可能是本设备刚修改的
+    if (localTime > cloudTime + 5 * 60 * 1000) return local;
+    // 否则优先使用云端数据
     return cloud;
   },
 
