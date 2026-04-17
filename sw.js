@@ -1,4 +1,4 @@
-const CACHE_NAME = 'otter-ledger-v9';
+const CACHE_NAME = 'otter-ledger-v10';
 const BASE_URL = self.location.pathname.replace(/\/sw\.js$/, '');
 
 const urlsToCache = [
@@ -17,27 +17,46 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// 网络优先策略：先请求网络，失败才用缓存
-// 这样每次部署新版本，用户不需要清缓存就能看到最新代码
+// 网络优先 + 绕过HTTP缓存：对 HTML/JS 文件强制从服务器获取最新版
 self.addEventListener('fetch', event => {
-  // 只处理 GET 请求
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+  const isAppAsset = url.pathname.endsWith('.html') ||
+                     url.pathname.endsWith('.js') ||
+                     url.pathname.endsWith('.json') ||
+                     url.pathname.endsWith('.css');
+
+  // HTML/JS: 强制绕过HTTP缓存，始终从服务器获取最新
+  if (isAppAsset) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .then(networkResponse => {
+          if (networkResponse.ok) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request)
+            .then(cached => cached || caches.match(BASE_URL + '/index.html'));
+        })
+    );
+    return;
+  }
+
+  // 其他资源（图片等）：正常网络优先
   event.respondWith(
     fetch(event.request)
       .then(networkResponse => {
-        // 网络成功：更新缓存并返回
         if (networkResponse.ok) {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
         }
         return networkResponse;
       })
-      .catch(() => {
-        // 网络失败：从缓存读取（离线模式）
-        return caches.match(event.request)
-          .then(cached => cached || caches.match(BASE_URL + '/index.html'));
-      })
+      .catch(() => caches.match(event.request))
   );
 });
 
