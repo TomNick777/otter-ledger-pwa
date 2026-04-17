@@ -57,6 +57,10 @@ const dataStore = {
       activityLog: this.activityLog,
       lastModified: Date.now()
     }));
+    // 自动同步到云端
+    if (typeof syncManager !== 'undefined' && syncManager.sync && githubAuth.token) {
+      syncManager.sync();
+    }
   },
 
   // 获取某账户某日余额 = 初始余额 + 该日及之前的累计收入（仅该账户）
