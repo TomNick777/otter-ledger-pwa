@@ -394,7 +394,7 @@ const syncManager = {
       console.log('Pull result:', result);
       // result: { data: cloudData, exists: boolean }
       
-      if (result.exists && result.data && result.data.lastModified) {
+      if (result.exists && result.data && (result.data.lastModified || result.data.exportTime)) {
         // 云端有数据，使用GitHub优先策略
         console.log('Cloud data found, merging...');
         const localData = dataStore.export();
@@ -458,24 +458,23 @@ const syncManager = {
   },
 
   mergeData(local, cloud) {
-    // GitHub 优先策略：除非本地数据明显更新，否则使用云端数据
     if (!cloud || !cloud.accounts) return local;
     if (!local || !local.accounts || local.accounts.length === 0) return cloud;
     
-    // 云端数据比本地新或相等，使用云端
-    if ((cloud.lastModified || 0) >= (local.lastModified || 0)) {
+    const cloudTime = cloud.lastModified || (cloud.exportTime ? new Date(cloud.exportTime).getTime() : 0);
+    const localTime = local.lastModified || (local.exportTime ? new Date(local.exportTime).getTime() : 0);
+    
+    if (cloudTime >= localTime) {
       console.log('Sync: using cloud data (newer or equal)');
       return cloud;
     }
     
-    // 本地数据比云端新超过5分钟，可能是本设备刚修改的，使用本地
-    const timeDiff = (local.lastModified || 0) - (cloud.lastModified || 0);
+    const timeDiff = localTime - cloudTime;
     if (timeDiff > 5 * 60 * 1000) {
       console.log('Sync: using local data (significantly newer)');
       return local;
     }
     
-    // 时间差在5分钟内，优先使用云端避免冲突
     console.log('Sync: using cloud data (small time diff, prefer cloud)');
     return cloud;
   },
