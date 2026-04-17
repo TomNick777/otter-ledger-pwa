@@ -12,31 +12,39 @@ const CONFIG = {
 };
 
 // ==================== 数据存储 ====================
+// 数据结构完全按 DESIGN.md 设计文档实现
 const dataStore = {
+  // 账户表 - 存储账户基本信息
   accounts: [],
+  // 余额快照表 - 每月末的账户余额记录
+  balanceSnapshots: [],
+  // 收入记录表 - 日常收入
   incomeRecords: [],
+  // 转账记录表 - 账户间转账
   transferRecords: [],
-  expenses: [],
 
   init() {
     const saved = localStorage.getItem('otter-ledger-data');
     console.log('[init] localStorage 原始数据:', saved ? JSON.parse(saved) : null);
     this.accounts = [];
+    this.balanceSnapshots = [];
     this.incomeRecords = [];
     this.transferRecords = [];
-    this.expenses = [];
     if (saved) {
       const data = JSON.parse(saved);
+      // 兼容旧版本迁移
       this.accounts = data.accounts || [];
-      this.incomeRecords = data.incomeRecords || [];
+      this.balanceSnapshots = data.balanceSnapshots || [];
+      this.incomeRecords = data.incomeRecords || data.incomeRecords || [];
       this.transferRecords = data.transferRecords || [];
-      this.expenses = data.expenses || [];
+      // 旧版 expenses 废弃，转账记录包含在 transferRecords 中
     }
     console.log('[init] this.accounts 加载后:', this.accounts, '长度:', this.accounts.length);
     if (this.accounts.length === 0) {
+      // 创建默认账户（储蓄卡类型）
       this.accounts = [
-        { id: 'cash', name: '现金', type: 'cash', emoji: '💵', balance: 0, initialBalance: 0 },
-        { id: 'bank', name: '银行卡', type: 'bank', emoji: '🏦', balance: 0, initialBalance: 0 }
+        { id: 'acc_1', name: '现金', type: 'debit', emoji: '💵', initialBalance: 0, createdAt: new Date().toISOString().split('T')[0] },
+        { id: 'acc_2', name: '银行卡', type: 'debit', emoji: '🏦', initialBalance: 0, createdAt: new Date().toISOString().split('T')[0] }
       ];
       console.log('[init] 创建默认账户，保存...');
       this.save();
@@ -47,163 +55,200 @@ const dataStore = {
   save() {
     localStorage.setItem('otter-ledger-data', JSON.stringify({
       accounts: this.accounts,
+      balanceSnapshots: this.balanceSnapshots,
       incomeRecords: this.incomeRecords,
       transferRecords: this.transferRecords,
-      expenses: this.expenses,
       lastModified: Date.now()
     }));
   },
 
+  // 获取某日期的账户余额（优先用快照，没有则用初始余额）
+  getAccountBalanceAtDate(accountId, date) {
+    const account = this.accounts.find(a => a.id === accountId);
+    if (!account) return 0;
+    
+    const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+    const snapshots = this.balanceSnapshots
+      .filter(s => s.accountId === accountId && s.snapshotDate <= dateStr)
+      .sort((a, b) => b.snapshotDate.localeCompare(a.snapshotDate));
+    
+    if (snapshots.length > 0) {
+      return snapshots[0].balance;
+    }
+    // 没有快照时，使用初始余额
+    return account.initialBalance;
+  },
+
+  // 计算某日期的总资产
+  // 总资产 = Σ(储蓄卡余额) - Σ(信用卡欠款)
+  getTotalAssetAtDate(date) {
+    const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+    return this.accounts.reduce((sum, acc) => {
+      const balance = this.getAccountBalanceAtDate(acc.id, dateStr);
+      return acc.type === 'debit' ? sum + balance : sum - balance;
+    }, 0);
+  },
+
+  // 获取某月收入总额
+  getMonthlyIncome(year, month) {
+    const start = `${year}-${String(month).padStart(2, '0')}-01`;
+    const end = new Date(year, month, 0).toISOString().split('T')[0];
+    return this.incomeRecords
+      .filter(r => r.date >= start && r.date <= end)
+      .reduce((sum, r) => sum + r.amount, 0);
+  },
+
+  // 计算某月支出（反推法）
+  // 支出 = 期初资产 + 本月收入 - 期末资产
+  getMonthlyExpense(year, month) {
+    // 期初：上月末
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    const prevMonthEnd = new Date(prevYear, prevMonth, 0).toISOString().split('T')[0];
+    
+    // 期末：本月末
+    const currMonthEnd = new Date(year, month, 0).toISOString().split('T')[0];
+    
+    const prevAsset = this.getTotalAssetAtDate(prevMonthEnd);
+    const currAsset = this.getTotalAssetAtDate(currMonthEnd);
+    const income = this.getMonthlyIncome(year, month);
+    
+    return prevAsset + income - currAsset;
+  },
+
+  // 添加账户
+  addAccount(account) {
+    account.id = 'acc_' + Date.now();
+    account.createdAt = account.createdAt || new Date().toISOString().split('T')[0];
+    account.initialBalance = parseFloat(account.initialBalance) || 0;
+    this.accounts.push(account);
+    this.save();
+    return account;
+  },
+
+  // 更新账户初始余额
+  updateAccountInitialBalance(id, newInitialBalance) {
+    const acc = this.accounts.find(a => a.id === id);
+    if (acc) {
+      acc.initialBalance = parseFloat(newInitialBalance);
+      this.save();
+    }
+  },
+
+  // 删除账户
+  deleteAccount(id) {
+    this.accounts = this.accounts.filter(a => a.id !== id);
+    this.save();
+  },
+
+  // 添加余额快照（月末盘点）
+  addSnapshot(accountId, snapshotDate, balance) {
+    // 检查是否已有该账户在该日期的快照，有则更新，无则新增
+    const existing = this.balanceSnapshots.find(
+      s => s.accountId === accountId && s.snapshotDate === snapshotDate
+    );
+    if (existing) {
+      existing.balance = balance;
+      existing.updatedAt = Date.now();
+    } else {
+      this.balanceSnapshots.push({
+        id: 'snap_' + Date.now(),
+        accountId,
+        snapshotDate,
+        balance,
+        createdAt: Date.now()
+      });
+    }
+    this.save();
+  },
+
+  // 获取账户的所有快照
+  getAccountSnapshots(accountId) {
+    return this.balanceSnapshots
+      .filter(s => s.accountId === accountId)
+      .sort((a, b) => b.snapshotDate.localeCompare(a.snapshotDate));
+  },
+
+  // 添加收入记录
+  addIncomeRecord(record) {
+    record.id = 'inc_' + Date.now();
+    record.date = record.date || new Date().toISOString().split('T')[0];
+    record.amount = parseFloat(record.amount) || 0;
+    record.category = record.category || '其他';
+    this.incomeRecords.unshift(record);
+    this.save();
+    return record;
+  },
+
+  // 添加转账记录
+  addTransferRecord(record) {
+    record.id = 'trans_' + Date.now();
+    record.date = record.date || new Date().toISOString().split('T')[0];
+    record.amount = parseFloat(record.amount) || 0;
+    this.transferRecords.unshift(record);
+    this.save();
+    return record;
+  },
+
+  // 获取历史资产数据（用于折线图）
+  getHistoryData(months = 6) {
+    const history = [];
+    const now = new Date();
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const label = `${year}-${String(month).padStart(2, '0')}`;
+      const monthEnd = new Date(year, month, 0).toISOString().split('T')[0];
+      
+      const totalAsset = this.getTotalAssetAtDate(monthEnd);
+      const income = this.getMonthlyIncome(year, month);
+      const expense = this.getMonthlyExpense(year, month);
+      
+      history.push({ label, totalAsset, income, expense, year, month });
+    }
+    return history;
+  },
+
+  // 按分类统计收入
+  getIncomeByCategory() {
+    const catMap = {};
+    this.incomeRecords.forEach(r => {
+      const cat = r.category || '其他';
+      catMap[cat] = (catMap[cat] || 0) + r.amount;
+    });
+    const catEmojis = { '工资': '💰', '奖金': '🎁', '红包': '🧧', '理财收益': '📈', '兼职': '💼', '退款': '↩️', '其他': '📦' };
+    return Object.entries(catMap)
+      .map(([name, amount]) => ({ name, amount, emoji: catEmojis[name] || '📦' }))
+      .sort((a, b) => b.amount - a.amount);
+  },
+
+  // 兼容旧版本的接口（过渡用）
   getTotalBalance() {
-    return this.accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    // 兼容：返回储蓄卡总额 - 信用卡总额
+    return this.accounts.reduce((sum, acc) => {
+      const balance = acc.balance || acc.initialBalance || 0;
+      return acc.type === 'debit' ? sum + balance : sum - balance;
+    }, 0);
   },
 
   getTotalInitialBalance() {
     return this.accounts.reduce((sum, acc) => sum + (acc.initialBalance || 0), 0);
   },
 
-  getMonthlyIncome(year, month) {
+  getMonthlyExpenseOld(year, month) {
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month, 0);
-    return this.incomeRecords
-      .filter(r => {
-        const d = new Date(r.date);
-        return d >= start && d <= end;
-      })
-      .reduce((sum, r) => sum + r.totalAmount, 0);
+    // 兼容旧版 expenses 表
+    return 0;
   },
 
-  getMonthlyExpense(year, month) {
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 0);
-    return this.expenses
-      .filter(r => {
-        const d = new Date(r.date);
-        return d >= start && d <= end;
-      })
-      .reduce((sum, r) => sum + r.amount, 0);
-  },
-
-  getHistoryData() {
-    const months = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const month = d.getMonth() + 1;
-      const label = `${year}-${String(month).padStart(2, '0')}`;
-
-      let balance = this.getTotalInitialBalance();
-      const cutoff = new Date(year, month - 1, 1);
-
-      this.incomeRecords
-        .filter(r => new Date(r.date) < cutoff)
-        .forEach(r => {
-          r.toAccounts.forEach(ta => {
-            const acc = this.accounts.find(a => a.id === ta.id);
-            if (acc) {
-              balance = acc.initialBalance || 0;
-            }
-          });
-        });
-
-      months.push({ label, balance, year, month });
-    }
-    // Calculate actual balances
-    let runningBalance = this.getTotalInitialBalance();
-    const history = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const month = d.getMonth() + 1;
-      const label = `${year}-${String(month).padStart(2, '0')}`;
-      const monthEnd = new Date(year, month, 0);
-
-      this.incomeRecords
-        .filter(r => new Date(r.date) >= new Date(year, month - 1, 1) && new Date(r.date) <= monthEnd)
-        .forEach(r => { r.toAccounts.forEach(ta => { runningBalance += ta.amount; }); });
-
-      this.expenses
-        .filter(r => new Date(r.date) >= new Date(year, month - 1, 1) && new Date(r.date) <= monthEnd)
-        .forEach(r => { runningBalance -= r.amount; });
-
-      history.push({ label, balance: runningBalance, year, month });
-    }
-    return history;
+  getHistoryDataOld() {
+    return this.getHistoryData(6);
   },
 
   getExpenseByCategory() {
-    const catMap = {};
-    this.expenses.forEach(e => {
-      const cat = e.category || '其他';
-      catMap[cat] = (catMap[cat] || 0) + e.amount;
-    });
-    const catEmojis = { '餐饮': '🍜', '交通': '🚗', '购物': '🛒', '娱乐': '🎮', '居住': '🏠', '医疗': '💊', '教育': '📚', '其他': '📦' };
-    return Object.entries(catMap)
-      .map(([name, amount]) => ({ name, amount, emoji: catEmojis[name] || '📦' }))
-      .sort((a, b) => b.amount - a.amount);
-  },
-
-  addIncome(record) {
-    record.id = Date.now().toString();
-    record.datetime = new Date().toISOString();
-    this.incomeRecords.unshift(record);
-    record.toAccounts.forEach(({ id, amount }) => {
-      const acc = this.accounts.find(a => a.id === id);
-      if (acc) acc.balance += amount;
-    });
-    this.save();
-    return record;
-  },
-
-  addExpense(record) {
-    record.id = 'exp_' + Date.now();
-    record.datetime = new Date().toISOString();
-    this.expenses.unshift(record);
-    const acc = this.accounts.find(a => a.id === record.fromAccount);
-    if (acc) acc.balance -= record.amount;
-    this.save();
-    return record;
-  },
-
-  addAccount(account) {
-    account.id = 'acc_' + Date.now();
-    account.balance = parseFloat(account.initialBalance) || 0;
-    console.log('[addAccount] 添加前 accounts:', this.accounts, '长度:', this.accounts.length);
-    this.accounts.push(account);
-    console.log('[addAccount] 添加后 accounts:', this.accounts, '长度:', this.accounts.length);
-    this.save();
-    console.log('[addAccount] 保存后 localStorage:', localStorage.getItem('otter-ledger-data'));
-    return account;
-  },
-
-  updateAccountBalance(id, newBalance) {
-    const acc = this.accounts.find(a => a.id === id);
-    if (acc) { acc.balance = newBalance; this.save(); }
-  },
-
-  deleteAccount(id) {
-    this.accounts = this.accounts.filter(a => a.id !== id);
-    this.save();
-  },
-
-  export() {
-    return {
-      accounts: this.accounts,
-      incomeRecords: this.incomeRecords,
-      transferRecords: this.transferRecords,
-      expenses: this.expenses,
-      lastModified: Date.now(),
-      exportTime: new Date().toISOString()
-    };
-  },
-
-  import(data) {
-    if (data.accounts) this.accounts = data.accounts;
-    if (data.incomeRecords) this.incomeRecords = data.incomeRecords;
-    if (data.transferRecords) this.transferRecords = data.transferRecords;
-    if (data.expenses) this.expenses = data.expenses;
-    this.save();
+    return [];
   }
 };
 
@@ -322,7 +367,13 @@ const syncManager = {
           headers: { 'Authorization': `token ${githubAuth.token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: CONFIG.REPO_NAME, description: '海獭账本数据存储', private: true, auto_init: true })
         });
-        await this.pushToGitHub({ accounts: dataStore.accounts, incomeRecords: [], transferRecords: [], expenses: [], version: '1.0' }, 'Initial data');
+        await this.pushToGitHub({ 
+          accounts: dataStore.accounts, 
+          balanceSnapshots: dataStore.balanceSnapshots,
+          incomeRecords: dataStore.incomeRecords, 
+          transferRecords: [], 
+          version: '2.0' 
+        }, 'Initial data');
       }
     } catch (err) { console.error('Init repo error:', err); }
   },
@@ -517,9 +568,8 @@ const accountManager = {
     const type = document.getElementById('newAccountType').value;
     const initialBalance = parseFloat(document.getElementById('newAccountInitialBalance').value) || 0;
     const typeMap = {
-      cash: { emoji: '💵' }, bank: { emoji: '🏦' },
-      alipay: { emoji: '💙' }, wechat: { emoji: '💚' },
-      investment: { emoji: '📈' }, credit: { emoji: '💳' }, other: { emoji: '📦' }
+      debit: { emoji: '💰', name: '储蓄账户' },
+      credit: { emoji: '💳', name: '信用卡' }
     };
     const newAcc = dataStore.addAccount({ name, type, emoji: typeMap[type].emoji, initialBalance });
     console.log('添加账户:', newAcc, '当前accounts:', dataStore.accounts);
@@ -566,12 +616,29 @@ const accountManager = {
     if (githubAuth.token) syncManager.sync();
   },
 
+  quickSnapshot(id, snapshotDate) {
+    const input = document.getElementById('balanceInput_' + id);
+    if (!input) return;
+    const newBalance = parseFloat(input.value);
+    if (isNaN(newBalance)) { ui.showToast('请输入有效金额'); return; }
+    
+    // 添加月末快照
+    dataStore.addSnapshot(id, snapshotDate, newBalance);
+    ui.showToast('快照已保存 ✓');
+    ui.render();
+    if (githubAuth.token) syncManager.sync();
+  },
+  
   quickUpdate(id) {
+    // 兼容旧版本：直接更新账户余额（不推荐，建议用快照）
     const input = document.getElementById('balanceInput_' + id);
     if (!input) return;
     const newBalance = parseFloat(input.value);
     if (isNaN(newBalance)) return;
-    dataStore.updateAccountBalance(id, newBalance);
+    
+    const now = new Date();
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    dataStore.addSnapshot(id, monthEnd, newBalance);
     ui.render();
     if (githubAuth.token) syncManager.sync();
   }
@@ -662,8 +729,8 @@ const ui = {
   },
 
   renderRecords() {
+    // 根据 DESIGN.md：只记录收入，支出通过"期初资产 + 收入 - 期末资产"反推
     const records = [
-      ...dataStore.expenses.map(e => ({ ...e, _type: 'expense', account: dataStore.accounts.find(a => a.id === e.fromAccount) })),
       ...dataStore.incomeRecords.map(r => ({ ...r, _type: 'income', account: dataStore.accounts.find(a => a.id === r.toAccounts[0]?.id) }))
     ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
 
@@ -672,22 +739,21 @@ const ui = {
 
     const renderRows = (data) => data.map(r => `
       <tr>
-        <td><span class="record-type-tag ${r._type}">${r._type === 'income' ? '📈 收入' : '📉 支出'}</span></td>
-        <td style="font-weight:500">${r._type === 'income' ? r.source : r.desc}</td>
+        <td><span class="record-type-tag ${r._type}">📈 收入</span></td>
+        <td style="font-weight:500">${r.source}</td>
         <td style="color:var(--text-secondary)">${r.account?.emoji || ''} ${r.account?.name || '-'}</td>
         <td style="color:var(--text-secondary);font-size:12px">${r.date}</td>
-        <td style="text-align:right"><span class="amount-value ${r._type}">${r._type === 'income' ? '+' : '-'}¥${(r._type === 'income' ? r.totalAmount : r.amount).toFixed(2)}</span></td>
+        <td style="text-align:right"><span class="amount-value ${r._type}">+¥${r.totalAmount.toFixed(2)}</span></td>
       </tr>
     `).join('');
 
-    tbody.innerHTML = records.length > 0 ? renderRows(records) : '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:32px 0;">暂无记录</td></tr>';
+    tbody.innerHTML = records.length > 0 ? renderRows(records) : '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:32px 0;">暂无收入记录</td></tr>';
 
     const allRecords = [
-      ...dataStore.expenses.map(e => ({ ...e, _type: 'expense', account: dataStore.accounts.find(a => a.id === e.fromAccount) })),
       ...dataStore.incomeRecords.map(r => ({ ...r, _type: 'income', account: dataStore.accounts.find(a => a.id === r.toAccounts[0]?.id) }))
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    allBody.innerHTML = allRecords.length > 0 ? renderRows(allRecords) : '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:32px 0;">暂无记录</td></tr>';
+    allBody.innerHTML = allRecords.length > 0 ? renderRows(allRecords) : '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:32px 0;">暂无收入记录</td></tr>';
   },
 
   renderAccountsPage() {
@@ -701,15 +767,23 @@ const ui = {
     console.log('[renderAccountsPage] 元素:', { accCountEl, accountsListEl });
     if (accCountEl) accCountEl.textContent = dataStore.accounts.length;
     if (totalInitialEl) totalInitialEl.textContent = dataStore.getTotalInitialBalance().toFixed(2);
-    if (totalCurrentEl) totalCurrentEl.textContent = dataStore.getTotalBalance().toFixed(2);
+    if (totalCurrentEl) totalCurrentEl.textContent = dataStore.getTotalAssetAtDate(new Date()).toFixed(2);
     if (accountsListCountEl) accountsListCountEl.textContent = `(${dataStore.accounts.length} 个账户)`;
 
     if (!accountsListEl) return;
     
-    const colors = { cash: '#E8F5E9', bank: '#E3F2FD', alipay: '#E1F5FE', wechat: '#E8F5E9', investment: '#FFF3E0', credit: '#FCE4EC', other: '#F5F5F5' };
-    const typeNames = { cash: '现金', bank: '银行卡', alipay: '支付宝', wechat: '微信', investment: '投资理财', credit: '信用卡', other: '其他' };
+    const colors = { debit: '#E8F5E9', credit: '#FCE4EC' };
+    const typeNames = { debit: '储蓄账户', credit: '信用卡' };
+    
+    // 获取本月末日期
+    const now = new Date();
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    
     accountsListEl.innerHTML = dataStore.accounts.length > 0
-      ? dataStore.accounts.map(acc => `
+      ? dataStore.accounts.map(acc => {
+          // 从快照获取当前余额，没有则用初始余额
+          const currentBalance = dataStore.getAccountBalanceAtDate(acc.id, monthEnd);
+          return `
         <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);">
           <div class="acc-icon" style="background:${colors[acc.type] || '#F5F5F5'};width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${acc.emoji}</div>
           <div style="flex:1">
@@ -717,21 +791,22 @@ const ui = {
             <div style="font-size:12px;color:var(--text-secondary)">${typeNames[acc.type] || '其他'} · 期初 ¥${(acc.initialBalance || 0).toFixed(2)}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-weight:700;font-size:15px;color:${acc.balance >= 0 ? 'var(--text)' : 'var(--danger)'}">¥${acc.balance.toFixed(2)}</div>
+            <div style="font-weight:700;font-size:15px;color:${currentBalance >= 0 ? 'var(--text)' : 'var(--danger)'}">¥${currentBalance.toFixed(2)}</div>
             <div style="margin-top:6px;display:flex;gap:6px;align-items:center;">
               <button onclick="accountManager.edit('${acc.id}')" id="editBtn_${acc.id}" style="padding:5px 10px;background:rgba(56,189,248,0.1);color:var(--primary);border:none;border-radius:6px;font-size:12px;cursor:pointer;">✏️ 编辑</button>
-              <input type="number" step="0.01" id="balanceInput_${acc.id}" placeholder="新余额" style="width:80px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
-              <button onclick="accountManager.quickUpdate('${acc.id}')" style="padding:5px 10px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;">更新</button>
+              <input type="number" step="0.01" id="balanceInput_${acc.id}" placeholder="月末余额" style="width:80px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+              <button onclick="accountManager.quickSnapshot('${acc.id}', '${monthEnd}')" style="padding:5px 10px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;">📸 快照</button>
               <button onclick="accountManager.delete('${acc.id}')" style="padding:5px 8px;background:rgba(229,115,115,0.1);color:var(--danger);border:none;border-radius:6px;font-size:12px;cursor:pointer;">🗑️</button>
             </div>
           </div>
         </div>
-      `).join('')
+        `}).join('')
       : '<div class="empty-state"><div class="icon">💳</div><p>还没有账户</p></div>';
   },
 
   renderBadge() {
-    const count = dataStore.incomeRecords.length + dataStore.expenses.length;
+    // 只统计收入记录（按 DESIGN.md）
+    const count = dataStore.incomeRecords.length;
     document.getElementById('recordBadge').textContent = count;
   },
 
