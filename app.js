@@ -63,14 +63,22 @@ const dataStore = {
     }
   },
 
-  // 获取某账户某日余额 = 初始余额 + 该日及之前的累计收入（仅该账户）
+  // 获取某账户某日余额 = 快照余额（如有）或 初始余额 + 累计收入
   getAccountBalanceAtDate(accountId, date) {
     const account = this.accounts.find(a => a.id === accountId);
     if (!account) return 0;
 
     const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
 
-    // 该账户在该日期及之前的累计收入
+    // 优先使用最近的余额快照（该日期及之前的最新快照）
+    const snapshots = this.balanceSnapshots
+      .filter(s => s.accountId === accountId && s.date <= dateStr)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (snapshots.length > 0) {
+      return snapshots[0].balance;
+    }
+
+    // 无快照：该账户在该日期及之前的累计收入
     const totalIncome = this.incomeRecords
       .filter(r => r.accountId === accountId && r.date <= dateStr)
       .reduce((sum, r) => sum + r.amount, 0);
