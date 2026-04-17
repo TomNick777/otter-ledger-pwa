@@ -1525,10 +1525,10 @@
           </div>
           
           <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="stat-card">
+            <div class="stat-card" style="border:2px solid var(--neon-cyan);">
               <div class="label">账户数量</div>
-              <div class="value" id="accountCount">0</div>
-              <div class="sub">已创建</div>
+              <div class="value" id="accountCount" style="color:var(--neon-cyan);font-size:2em;">0</div>
+              <div class="sub">dataStore.accounts.length</div>
             </div>
             <div class="stat-card">
               <div class="label">期初余额</div>
@@ -1542,11 +1542,11 @@
             </div>
           </div>
           
-          <div class="card">
+          <div class="card" style="border:2px solid var(--neon-cyan);border-radius:16px;">
             <div class="card-header">
-              <div class="card-title">账户列表</div>
+              <div class="card-title">账户列表 <span id="accountsListCount" style="color:var(--neon-cyan);font-size:12px;"></span></div>
             </div>
-            <div class="card-body" id="accountsList"></div>
+            <div class="card-body" id="accountsList" style="min-height:60px;"></div>
           </div>
         </div>
 

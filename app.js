@@ -679,10 +679,12 @@ const ui = {
     const totalInitialEl = document.getElementById('totalInitial');
     const totalCurrentEl = document.getElementById('totalCurrent');
     const accountsListEl = document.getElementById('accountsList');
+    const accountsListCountEl = document.getElementById('accountsListCount');
     
     if (accCountEl) accCountEl.textContent = dataStore.accounts.length;
     if (totalInitialEl) totalInitialEl.textContent = dataStore.getTotalInitialBalance().toFixed(2);
     if (totalCurrentEl) totalCurrentEl.textContent = dataStore.getTotalBalance().toFixed(2);
+    if (accountsListCountEl) accountsListCountEl.textContent = `(${dataStore.accounts.length} 个账户)`;
 
     if (!accountsListEl) return;
     
