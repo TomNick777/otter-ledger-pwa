@@ -518,22 +518,17 @@ const addManager = {
     if (!amount || amount <= 0) { ui.showToast('请输入有效金额'); return; }
 
     if (type === 'income') {
-      dataStore.addIncome({
-        totalAmount: amount,
+      dataStore.addIncomeRecord({
+        amount: amount,
         source: desc,
         date: date,
-        toAccounts: [{ id: accountId, amount: amount }]
+        category: this.guessCategory(desc)
       });
       ui.showToast('收入已记录 ✓');
     } else {
-      dataStore.addExpense({
-        amount: amount,
-        desc: desc,
-        date: date,
-        fromAccount: accountId,
-        category: this.guessCategory(desc)
-      });
-      ui.showToast('支出已记录 ✓');
+      // 按 DESIGN.md：不直接记录支出，通过反推计算
+      // 这里暂时不做任何操作
+      ui.showToast('请使用快照记录月末余额 ✓');
     }
 
     pageManager.hideModal('addModal');
@@ -697,17 +692,19 @@ const ui = {
 
   renderSidebarAccounts() {
     const container = document.getElementById('sidebarAccounts');
-    const colors = { cash: '#E8F5E9', bank: '#E3F2FD', alipay: '#E1F5FE', wechat: '#E8F5E9', investment: '#FFF3E0', credit: '#FCE4EC', other: '#F5F5F5' };
-    container.innerHTML = dataStore.accounts.map(acc => `
+    const colors = { debit: '#E8F5E9', credit: '#FCE4EC' };
+    container.innerHTML = dataStore.accounts.map(acc => {
+      const balance = acc.balance ?? acc.initialBalance ?? 0;
+      return `
       <div class="account-item">
         <div class="acc-icon" style="background:${colors[acc.type] || '#F5F5F5'}">${acc.emoji}</div>
         <div class="acc-info">
           <div class="acc-name">${acc.name}</div>
-          <div class="acc-type">${acc.type === 'bank' ? '银行卡' : acc.type === 'cash' ? '现金' : acc.type === 'alipay' ? '支付宝' : acc.type === 'wechat' ? '微信' : acc.type === 'investment' ? '投资' : acc.type === 'credit' ? '信用卡' : '其他'}</div>
+          <div class="acc-type">${acc.type === 'debit' ? '储蓄账户' : '信用卡'}</div>
         </div>
-        <div class="acc-balance" style="color:${acc.balance >= 0 ? 'var(--text)' : 'var(--danger)'}">¥${acc.balance.toFixed(2)}</div>
+        <div class="acc-balance" style="color:${balance >= 0 ? 'var(--text)' : 'var(--danger)'}">¥${balance.toFixed(2)}</div>
       </div>
-    `).join('');
+    `}).join('');
   },
 
   renderCategories() {
