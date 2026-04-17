@@ -395,9 +395,22 @@ const syncManager = {
       
       if (result.exists && result.data && (result.data.lastModified || result.data.exportTime)) {
         const localData = dataStore.export();
-        const merged = this.mergeData(localData, result.data);
-        dataStore.import(merged);
-        await this.pushToGitHub(merged, `Sync ${new Date().toLocaleString('zh-CN')}`);
+        const cloudTime = result.data.lastModified || (result.data.exportTime ? new Date(result.data.exportTime).getTime() : 0);
+        const localTime = localData.lastModified || (localData.exportTime ? new Date(localData.exportTime).getTime() : 0);
+        
+        // 本地更新：先推后拉，确保本地修改不被覆盖
+        if (localTime >= cloudTime - 30000) {
+          await this.pushToGitHub(localData, `Sync ${new Date().toLocaleString('zh-CN')}`);
+          // 推完再拉确认
+          const recheck = await this.pullFromGitHub();
+          if (recheck.exists && recheck.data) {
+            dataStore.import(recheck.data);
+          }
+        } else {
+          // 云端更新：直接拉取
+          dataStore.import(result.data);
+          dataStore.save();
+        }
       } else if (result.exists === false) {
         const localData = dataStore.export();
         if (localData.accounts && localData.accounts.length > 0) {
@@ -463,9 +476,9 @@ const syncManager = {
     const cloudTime = cloud.lastModified || (cloud.exportTime ? new Date(cloud.exportTime).getTime() : 0);
     const localTime = local.lastModified || (local.exportTime ? new Date(local.exportTime).getTime() : 0);
     
-    // 本地数据比云端新超过5分钟，可能是本设备刚修改的
-    if (localTime > cloudTime + 5 * 60 * 1000) return local;
-    // 否则优先使用云端数据
+    // 本地比云端新（允许30秒时钟误差），优先用本地
+    if (localTime >= cloudTime - 30000) return local;
+    // 云端明显比本地新，用云端
     return cloud;
   },
 
