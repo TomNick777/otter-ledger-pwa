@@ -522,6 +522,33 @@ const accountManager = {
     if (githubAuth.token) syncManager.sync();
   },
 
+  edit(id) {
+    const acc = dataStore.accounts.find(a => a.id === id);
+    if (!acc) return;
+    const nameEl = document.getElementById('accName_' + id);
+    const editBtn = document.getElementById('editBtn_' + id);
+    if (!nameEl || !editBtn) return;
+    
+    // 将账户名改为输入框
+    const originalName = acc.name;
+    nameEl.innerHTML = `<input type="text" id="nameInput_${id}" value="${acc.name}" style="width:100px;padding:4px 8px;border:1.5px solid var(--primary);border-radius:4px;font-size:14px;font-weight:600;">`;
+    editBtn.textContent = '💾 保存';
+    editBtn.onclick = () => this.saveEdit(id);
+  },
+
+  saveEdit(id) {
+    const acc = dataStore.accounts.find(a => a.id === id);
+    if (!acc) return;
+    const input = document.getElementById('nameInput_' + id);
+    if (!input) return;
+    const newName = input.value.trim();
+    if (!newName) return;
+    acc.name = newName;
+    dataStore.save();
+    ui.render();
+    if (githubAuth.token) syncManager.sync();
+  },
+
   delete(id) {
     if (!confirm('确定要删除这个账户吗？')) return;
     dataStore.deleteAccount(id);
@@ -652,18 +679,20 @@ const ui = {
     document.getElementById('totalCurrent').textContent = dataStore.getTotalBalance().toFixed(2);
 
     const colors = { cash: '#E8F5E9', bank: '#E3F2FD', alipay: '#E1F5FE', wechat: '#E8F5E9', investment: '#FFF3E0', credit: '#FCE4EC', other: '#F5F5F5' };
+    const typeNames = { cash: '现金', bank: '银行卡', alipay: '支付宝', wechat: '微信', investment: '投资理财', credit: '信用卡', other: '其他' };
     document.getElementById('accountsList').innerHTML = dataStore.accounts.length > 0
       ? dataStore.accounts.map(acc => `
         <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);">
           <div class="acc-icon" style="background:${colors[acc.type] || '#F5F5F5'};width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${acc.emoji}</div>
           <div style="flex:1">
-            <div style="font-weight:600;font-size:14px">${acc.name}</div>
-            <div style="font-size:12px;color:var(--text-secondary)">${acc.type === 'bank' ? '银行卡' : acc.type === 'cash' ? '现金' : acc.type === 'alipay' ? '支付宝' : acc.type === 'wechat' ? '微信' : acc.type === 'investment' ? '投资理财' : acc.type === 'credit' ? '信用卡' : '其他'}</div>
+            <div style="font-weight:600;font-size:14px" id="accName_${acc.id}">${acc.name}</div>
+            <div style="font-size:12px;color:var(--text-secondary)">${typeNames[acc.type] || '其他'} · 期初 ¥${(acc.initialBalance || 0).toFixed(2)}</div>
           </div>
           <div style="text-align:right">
             <div style="font-weight:700;font-size:15px;color:${acc.balance >= 0 ? 'var(--text)' : 'var(--danger)'}">¥${acc.balance.toFixed(2)}</div>
             <div style="margin-top:6px;display:flex;gap:6px;align-items:center;">
-              <input type="number" step="0.01" id="balanceInput_${acc.id}" placeholder="新余额" style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
+              <button onclick="accountManager.edit('${acc.id}')" id="editBtn_${acc.id}" style="padding:5px 10px;background:rgba(56,189,248,0.1);color:var(--primary);border:none;border-radius:6px;font-size:12px;cursor:pointer;">✏️ 编辑</button>
+              <input type="number" step="0.01" id="balanceInput_${acc.id}" placeholder="新余额" style="width:80px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;">
               <button onclick="accountManager.quickUpdate('${acc.id}')" style="padding:5px 10px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;">更新</button>
               <button onclick="accountManager.delete('${acc.id}')" style="padding:5px 8px;background:rgba(229,115,115,0.1);color:var(--danger);border:none;border-radius:6px;font-size:12px;cursor:pointer;">🗑️</button>
             </div>
