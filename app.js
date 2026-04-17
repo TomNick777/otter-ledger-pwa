@@ -20,6 +20,10 @@ const dataStore = {
 
   init() {
     const saved = localStorage.getItem('otter-ledger-data');
+    this.accounts = [];
+    this.incomeRecords = [];
+    this.transferRecords = [];
+    this.expenses = [];
     if (saved) {
       const data = JSON.parse(saved);
       this.accounts = data.accounts || [];
