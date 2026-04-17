@@ -394,10 +394,19 @@ const syncManager = {
         const merged = this.mergeData(localData, cloudData);
         dataStore.import(merged);
         await this.pushToGitHub(merged, `Sync ${new Date().toLocaleString('zh-CN')}`);
+      } else if (cloudData === null) {
+        // 云端无数据，推送本地数据（如果有）
+        const localData = dataStore.export();
+        if (localData.accounts && localData.accounts.length > 0) {
+          await this.pushToGitHub(localData, 'Initial data from local');
+        }
       }
       ui.render();
       ui.showToast('同步完成 ✓');
-    } catch (err) { ui.showToast('同步失败'); }
+    } catch (err) {
+      ui.showToast('同步失败');
+      throw err; // 让上层知道失败了
+    }
     finally { this.syncing = false; ui.setSyncing(false); }
   },
 
