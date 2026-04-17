@@ -225,11 +225,10 @@ const dataStore = {
 
   // 兼容旧版本的接口（过渡用）
   getTotalBalance() {
-    // 兼容：返回储蓄卡总额 - 信用卡总额
-    return this.accounts.reduce((sum, acc) => {
-      const balance = acc.balance || acc.initialBalance || 0;
-      return acc.type === 'debit' ? sum + balance : sum - balance;
-    }, 0);
+    // 总资产 = 储蓄账户总资产 - 信用卡总欠款
+    const now = new Date();
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    return this.getTotalAssetAtDate(monthEnd);
   },
 
   getTotalInitialBalance() {
@@ -571,13 +570,18 @@ const accountManager = {
       debit: { emoji: '💰', name: '储蓄账户' },
       credit: { emoji: '💳', name: '信用卡' }
     };
+    
+    console.log('[accountManager.add] 添加账户:', { name, type, initialBalance });
     const newAcc = dataStore.addAccount({ name, type, emoji: typeMap[type].emoji, initialBalance });
-    console.log('添加账户:', newAcc, '当前accounts:', dataStore.accounts);
+    console.log('[accountManager.add] 添加后 accounts:', dataStore.accounts);
+    console.log('[accountManager.add] localStorage:', localStorage.getItem('otter-ledger-data'));
     ui.showToast('账户添加成功 ✓');
     document.getElementById('newAccountName').value = '';
     document.getElementById('newAccountInitialBalance').value = '0';
     pageManager.hideModal('accountModal');
+    console.log('[accountManager.add] 调用 ui.render()...');
     ui.render();
+    console.log('[accountManager.add] ui.render() 完成');
     addManager.initAccount(); // 更新账户选择下拉框
     if (githubAuth.token) syncManager.sync();
   },
@@ -757,14 +761,21 @@ const ui = {
   },
 
   renderAccountsPage() {
-    console.log('[renderAccountsPage] 调用，dataStore.accounts:', dataStore.accounts);
+    console.log('[renderAccountsPage] ===== 开始渲染 =====');
+    console.log('[renderAccountsPage] dataStore.accounts:', dataStore.accounts);
     const accCountEl = document.getElementById('accountCount');
     const totalInitialEl = document.getElementById('totalInitial');
     const totalCurrentEl = document.getElementById('totalCurrent');
     const accountsListEl = document.getElementById('accountsList');
     const accountsListCountEl = document.getElementById('accountsListCount');
     
-    console.log('[renderAccountsPage] 元素:', { accCountEl, accountsListEl });
+    console.log('[renderAccountsPage] 元素:', { 
+      accCountEl: !!accCountEl, 
+      totalInitialEl: !!totalInitialEl,
+      totalCurrentEl: !!totalCurrentEl,
+      accountsListEl: !!accountsListEl,
+      accountsListCountEl: !!accountsListCountEl
+    });
     if (accCountEl) accCountEl.textContent = dataStore.accounts.length;
     if (totalInitialEl) totalInitialEl.textContent = dataStore.getTotalInitialBalance().toFixed(2);
     if (totalCurrentEl) totalCurrentEl.textContent = dataStore.getTotalAssetAtDate(new Date()).toFixed(2);
