@@ -420,7 +420,7 @@ const syncManager = {
       if (res.status === 404) return { exists: false, data: null };
       if (!res.ok) return { exists: null, data: null }; // 网络错误，不明确状态
       const file = await res.json();
-      return { exists: true, data: JSON.parse(atob(file.content)) };
+      return { exists: true, data: JSON.parse(decodeURIComponent(escape(atob(file.content)))) };
     } catch (err) { return { exists: null, data: null }; }
   },
 
