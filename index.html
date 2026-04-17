@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0A0A0A" id="themeMeta">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>海獭账本 | Otter Ledger</title>
   <link rel="manifest" href="manifest.json">
   
@@ -577,6 +580,18 @@
     }
     
     .theme-switch-icon { font-size: 16px; }
+    
+    .sidebar-footer-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+    
+    .version-tag {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
     }
     
     .sync-dot.syncing {
@@ -1437,8 +1452,11 @@
               <div class="sync-dot" id="syncDot"></div>
               <span id="syncStatusText">已同步</span>
             </div>
-            <div class="theme-switch" onclick="themeManager.toggle()" title="切换主题">
-              <span class="theme-switch-icon" id="themeSwitchIcon">☀️</span>
+            <div class="sidebar-footer-right">
+              <div class="theme-switch" onclick="themeManager.toggle()" title="切换主题">
+                <span class="theme-switch-icon" id="themeSwitchIcon">☀️</span>
+              </div>
+              <span class="version-tag">v1.0.0</span>
             </div>
           </div>
         </div>
