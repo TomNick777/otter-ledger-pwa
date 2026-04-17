@@ -20,6 +20,7 @@ const dataStore = {
 
   init() {
     const saved = localStorage.getItem('otter-ledger-data');
+    console.log('[init] localStorage 原始数据:', saved ? JSON.parse(saved) : null);
     this.accounts = [];
     this.incomeRecords = [];
     this.transferRecords = [];
@@ -31,12 +32,15 @@ const dataStore = {
       this.transferRecords = data.transferRecords || [];
       this.expenses = data.expenses || [];
     }
+    console.log('[init] this.accounts 加载后:', this.accounts, '长度:', this.accounts.length);
     if (this.accounts.length === 0) {
       this.accounts = [
         { id: 'cash', name: '现金', type: 'cash', emoji: '💵', balance: 0, initialBalance: 0 },
         { id: 'bank', name: '银行卡', type: 'bank', emoji: '🏦', balance: 0, initialBalance: 0 }
       ];
+      console.log('[init] 创建默认账户，保存...');
       this.save();
+      console.log('[init] 保存后 localStorage:', localStorage.getItem('otter-ledger-data'));
     }
   },
 
@@ -165,8 +169,11 @@ const dataStore = {
   addAccount(account) {
     account.id = 'acc_' + Date.now();
     account.balance = parseFloat(account.initialBalance) || 0;
+    console.log('[addAccount] 添加前 accounts:', this.accounts, '长度:', this.accounts.length);
     this.accounts.push(account);
+    console.log('[addAccount] 添加后 accounts:', this.accounts, '长度:', this.accounts.length);
     this.save();
+    console.log('[addAccount] 保存后 localStorage:', localStorage.getItem('otter-ledger-data'));
     return account;
   },
 
@@ -675,12 +682,14 @@ const ui = {
   },
 
   renderAccountsPage() {
+    console.log('[renderAccountsPage] 调用，dataStore.accounts:', dataStore.accounts);
     const accCountEl = document.getElementById('accountCount');
     const totalInitialEl = document.getElementById('totalInitial');
     const totalCurrentEl = document.getElementById('totalCurrent');
     const accountsListEl = document.getElementById('accountsList');
     const accountsListCountEl = document.getElementById('accountsListCount');
     
+    console.log('[renderAccountsPage] 元素:', { accCountEl, accountsListEl });
     if (accCountEl) accCountEl.textContent = dataStore.accounts.length;
     if (totalInitialEl) totalInitialEl.textContent = dataStore.getTotalInitialBalance().toFixed(2);
     if (totalCurrentEl) totalCurrentEl.textContent = dataStore.getTotalBalance().toFixed(2);
