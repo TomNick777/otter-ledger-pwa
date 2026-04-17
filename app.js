@@ -38,20 +38,12 @@ const dataStore = {
       this.incomeRecords = data.incomeRecords || [];
       this.transferRecords = data.transferRecords || [];
       this.activityLog = data.activityLog || [];
+      // 确保所有账户有 sortOrder
+      this.accounts.forEach((acc, i) => {
+        if (acc.sortOrder === undefined) acc.sortOrder = i;
+      });
+      this.accounts.sort((a, b) => a.sortOrder - b.sortOrder);
     }
-    if (this.accounts.length === 0) {
-      this.accounts = [
-        { id: 'acc_1', name: '现金', type: 'debit', emoji: '💵', initialBalance: 0, createdAt: new Date().toISOString().split('T')[0], sortOrder: 0 },
-        { id: 'acc_2', name: '银行卡', type: 'debit', emoji: '🏦', initialBalance: 0, createdAt: new Date().toISOString().split('T')[0], sortOrder: 1 }
-      ];
-      this.save();
-    }
-    // 确保所有账户有 sortOrder
-    this.accounts.forEach((acc, i) => {
-      if (acc.sortOrder === undefined) acc.sortOrder = i;
-    });
-    // 按 sortOrder 排序
-    this.accounts.sort((a, b) => a.sortOrder - b.sortOrder);
   },
 
   save() {
@@ -311,10 +303,20 @@ const githubAuth = {
       document.getElementById('settingsUser').textContent = 'GitHub: ' + this.user.login;
     }
     dataStore.init();
-    ui.render();
-    const current = document.documentElement.getAttribute('data-theme') || 'dark';
-    const switchIcon = document.getElementById('themeSwitchIcon');
-    if (switchIcon) switchIcon.textContent = current === 'dark' ? '☀️' : '🌙';
+    // 先等 GitHub 数据拉回来再渲染，避免新设备看到空白
+    this._renderAfterSync();
+  },
+
+  async _renderAfterSync() {
+    ui.setSyncing(true);
+    try {
+      await syncManager.sync();
+      ui.render();
+    } catch (err) {
+      ui.render(); // 网络失败时至少渲染本地数据
+      ui.showToast('同步失败，使用本地数据');
+    }
+    ui.setSyncing(false);
   },
 
   logout() {
@@ -374,7 +376,9 @@ const syncManager = {
           headers: { 'Authorization': `token ${githubAuth.token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: CONFIG.REPO_NAME, description: '海獭账本数据存储', private: true, auto_init: true })
         });
-        await this.pushToGitHub(dataStore.export(), 'Initial data');
+        // 创建仓库后立即推送本地数据（如果有的话），避免空数据覆盖
+        const local = dataStore.export();
+        await this.pushToGitHub(local, 'Initial data');
       }
     } catch (err) { console.error('Init repo error:', err); }
   },
@@ -427,8 +431,11 @@ const syncManager = {
   },
 
   mergeData(local, cloud) {
+    // GitHub 优先：本地仅作离线备用
     if (!cloud || !cloud.accounts) return local;
-    return (cloud.lastModified || 0) > (local.lastModified || 0) ? cloud : local;
+    if (!local || !local.accounts || local.accounts.length === 0) return cloud;
+    // 双方都有数据时取较新的
+    return (cloud.lastModified || 0) >= (local.lastModified || 0) ? cloud : local;
   },
 
   exportData() {
