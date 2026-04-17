@@ -513,7 +513,8 @@ const accountManager = {
       alipay: { emoji: '💙' }, wechat: { emoji: '💚' },
       investment: { emoji: '📈' }, credit: { emoji: '💳' }, other: { emoji: '📦' }
     };
-    dataStore.addAccount({ name, type, emoji: typeMap[type].emoji, initialBalance });
+    const newAcc = dataStore.addAccount({ name, type, emoji: typeMap[type].emoji, initialBalance });
+    console.log('添加账户:', newAcc, '当前accounts:', dataStore.accounts);
     ui.showToast('账户添加成功 ✓');
     document.getElementById('newAccountName').value = '';
     document.getElementById('newAccountInitialBalance').value = '0';
@@ -674,13 +675,20 @@ const ui = {
   },
 
   renderAccountsPage() {
-    document.getElementById('accountCount').textContent = dataStore.accounts.length;
-    document.getElementById('totalInitial').textContent = dataStore.getTotalInitialBalance().toFixed(2);
-    document.getElementById('totalCurrent').textContent = dataStore.getTotalBalance().toFixed(2);
+    const accCountEl = document.getElementById('accountCount');
+    const totalInitialEl = document.getElementById('totalInitial');
+    const totalCurrentEl = document.getElementById('totalCurrent');
+    const accountsListEl = document.getElementById('accountsList');
+    
+    if (accCountEl) accCountEl.textContent = dataStore.accounts.length;
+    if (totalInitialEl) totalInitialEl.textContent = dataStore.getTotalInitialBalance().toFixed(2);
+    if (totalCurrentEl) totalCurrentEl.textContent = dataStore.getTotalBalance().toFixed(2);
 
+    if (!accountsListEl) return;
+    
     const colors = { cash: '#E8F5E9', bank: '#E3F2FD', alipay: '#E1F5FE', wechat: '#E8F5E9', investment: '#FFF3E0', credit: '#FCE4EC', other: '#F5F5F5' };
     const typeNames = { cash: '现金', bank: '银行卡', alipay: '支付宝', wechat: '微信', investment: '投资理财', credit: '信用卡', other: '其他' };
-    document.getElementById('accountsList').innerHTML = dataStore.accounts.length > 0
+    accountsListEl.innerHTML = dataStore.accounts.length > 0
       ? dataStore.accounts.map(acc => `
         <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);">
           <div class="acc-icon" style="background:${colors[acc.type] || '#F5F5F5'};width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${acc.emoji}</div>
