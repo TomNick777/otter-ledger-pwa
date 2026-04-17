@@ -420,7 +420,11 @@ const syncManager = {
       if (res.status === 404) return { exists: false, data: null };
       if (!res.ok) return { exists: null, data: null }; // 网络错误，不明确状态
       const file = await res.json();
-      return { exists: true, data: JSON.parse(decodeURIComponent(escape(atob(file.content)))) };
+      // 用TextDecoder正确解码base64中的UTF-8中文
+      const binaryStr = atob(file.content.replace(/\s/g, ''));
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+      return { exists: true, data: JSON.parse(new TextDecoder().decode(bytes)) };
     } catch (err) { return { exists: null, data: null }; }
   },
 
@@ -432,7 +436,12 @@ const syncManager = {
       });
       if (res.ok) { const file = await res.json(); sha = file.sha; }
     } catch (e) {}
-    const body = { message, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))) };
+    const jsonStr = JSON.stringify(data, null, 2);
+    const encoder = new TextEncoder();
+    const uint8 = encoder.encode(jsonStr);
+    let binary = '';
+    uint8.forEach(b => binary += String.fromCharCode(b));
+    const body = { message, content: btoa(binary) };
     if (sha) body.sha = sha;
     const res = await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${CONFIG.REPO_NAME}/contents/${CONFIG.DATA_FILE}`, {
       method: 'PUT',
