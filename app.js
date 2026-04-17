@@ -584,6 +584,37 @@ const accountManager = {
     if (githubAuth.token) syncManager.sync();
   },
 
+  updateBalance(id) {
+    const acc = dataStore.accounts.find(a => a.id === id);
+    if (!acc) return;
+    const input = document.getElementById('updateInput_' + id);
+    if (!input) return;
+    const newBalance = parseFloat(input.value);
+    if (isNaN(newBalance)) {
+      ui.showToast('请输入有效金额');
+      return;
+    }
+
+    const currentBalance = dataStore.getAccountBalanceAtDate(acc.id, new Date());
+    const diff = newBalance - currentBalance;
+
+    // 调整期初余额来匹配新余额
+    acc.initialBalance = acc.initialBalance + diff;
+    dataStore.addActivity('account_update', {
+      accountId: id,
+      accountName: acc.name,
+      accountEmoji: acc.emoji,
+      oldBalance: currentBalance,
+      newBalance: newBalance,
+      description: `${acc.emoji} ${acc.name} 余额更新：¥${currentBalance.toFixed(2)} → ¥${newBalance.toFixed(2)}`
+    });
+    dataStore.save();
+    input.value = '';
+    ui.showToast('余额已更新 ✓');
+    ui.render();
+    if (githubAuth.token) syncManager.sync();
+  },
+
   delete(id) {
     if (!confirm('确定要删除这个账户吗？')) return;
     dataStore.deleteAccount(id);
@@ -766,21 +797,23 @@ const ui = {
         <div class="account-row" draggable="true" data-id="${acc.id}" data-sort="${acc.sortOrder}">
           <div class="drag-handle" title="拖动排序">⋮⋮</div>
           <div class="acc-icon" style="background:${colors[acc.type] || '#F5F5F5'};width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${acc.emoji}</div>
-          <div style="flex:1">
+          <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:14px" id="accName_${acc.id}">${acc.name}</div>
             <div style="font-size:12px;color:var(--text-secondary)">${typeNames[acc.type] || '其他'} · 期初 ¥${(acc.initialBalance || 0).toFixed(2)}</div>
           </div>
-          <div style="text-align:right">
+          <div style="text-align:right;flex-shrink:0">
             <div style="font-weight:700;font-size:15px;color:${displayBalance >= 0 ? 'var(--success)' : 'var(--danger)'}">
               ${acc.type === 'credit' ? '-' : ''}¥${Math.abs(displayBalance).toFixed(2)}
             </div>
-            <div style="margin-top:6px;display:flex;gap:6px;align-items:center;">
-              <button onclick="accountManager.edit('${acc.id}')" id="editBtn_${acc.id}" style="padding:5px 10px;background:rgba(56,189,248,0.1);color:var(--primary);border:none;border-radius:6px;font-size:12px;cursor:pointer;">✏️</button>
+            <div style="margin-top:6px;display:flex;gap:6px;align-items:center;justify-content:flex-end;">
+              <input type="number" id="updateInput_${acc.id}" placeholder="新余额" step="0.01" style="width:70px;padding:4px 6px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--input-bg);color:var(--text);text-align:right;">
+              <button onclick="accountManager.updateBalance('${acc.id}')" style="padding:5px 10px;background:rgba(0,255,179,0.1);color:var(--neon-cyan);border:1px solid rgba(0,255,179,0.3);border-radius:6px;font-size:11px;cursor:pointer;">更新</button>
+              <button onclick="accountManager.edit('${acc.id}')" id="editBtn_${acc.id}" style="padding:5px 8px;background:rgba(56,189,248,0.1);color:var(--primary);border:none;border-radius:6px;font-size:12px;cursor:pointer;">✏️</button>
               <button onclick="accountManager.delete('${acc.id}')" style="padding:5px 8px;background:rgba(229,115,115,0.1);color:var(--danger);border:none;border-radius:6px;font-size:12px;cursor:pointer;">🗑️</button>
             </div>
           </div>
         </div>
-        `}).join('')
+        `}).join(''
       : '<div class="empty-state"><div class="icon">💳</div><p>还没有账户</p></div>';
 
     // 绑定拖拽排序
@@ -872,7 +905,7 @@ const ui = {
       return;
     }
 
-    const padding = { top: 20, bottom: 30, left: 10, right: 10 };
+    const padding = { top: 20, bottom: 30, left: 50, right: 10 };
     const chartW = width - padding.left - padding.right;
     const chartH = height - padding.top - padding.bottom;
 
@@ -884,14 +917,24 @@ const ui = {
     ctx.fillStyle = 'rgba(0,255,179,0.01)';
     ctx.fillRect(padding.left, padding.top, chartW, chartH);
 
+    // 绘制 Y 轴网格线 + 标签
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
     for (let i = 0; i <= 3; i++) {
       const y = padding.top + (chartH / 3) * i;
+      const value = max - (range / 3) * i;
+      // 网格线
       ctx.beginPath();
       ctx.moveTo(padding.left, y);
       ctx.lineTo(width - padding.right, y);
       ctx.stroke();
+      // Y 轴标签
+      ctx.fillText('¥' + (value >= 10000 ? (value/10000).toFixed(1) + 'w' : value.toFixed(0)), padding.left - 6, y);
     }
 
     const points = data.map((d, i) => ({
