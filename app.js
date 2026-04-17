@@ -834,7 +834,7 @@ const ui = {
             </div>
           </div>
         </div>
-        `}).join(''
+        `}).join('')
       : '<div class="empty-state"><div class="icon">💳</div><p>还没有账户</p></div>';
 
     // 绑定拖拽排序
