@@ -596,10 +596,21 @@ const accountManager = {
     }
 
     const currentBalance = dataStore.getAccountBalanceAtDate(acc.id, new Date());
-    const diff = newBalance - currentBalance;
+    const today = new Date().toISOString().split('T')[0];
 
-    // 调整期初余额来匹配新余额
-    acc.initialBalance = acc.initialBalance + diff;
+    // 创建/更新今天的余额快照
+    const existingIdx = dataStore.balanceSnapshots.findIndex(s => s.accountId === id && s.date === today);
+    if (existingIdx >= 0) {
+      dataStore.balanceSnapshots[existingIdx].balance = newBalance;
+    } else {
+      dataStore.balanceSnapshots.push({
+        id: 'snap_' + Date.now(),
+        accountId: id,
+        date: today,
+        balance: newBalance
+      });
+    }
+
     dataStore.addActivity('account_update', {
       accountId: id,
       accountName: acc.name,
