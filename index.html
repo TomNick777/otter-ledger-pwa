@@ -1302,16 +1302,13 @@
       <!-- Left Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-header">
-          <div class="logo-wrap">
+                  <div class="logo-wrap">
             <span class="logo-icon">🦦</span>
             <div>
               <div class="logo-text">海獭账本</div>
               <div class="logo-sub">Otter Ledger</div>
             </div>
-          </div>
-          <!-- Theme Toggle -->
-          <button class="btn-theme" onclick="themeManager.toggle()" title="切换主题">
-            <span class="theme-icon" id="themeIcon">☀️</span>
+          </div>="themeIcon">☀️</span>
           </button>
         </div>
         
@@ -1338,6 +1335,11 @@
         
         <!-- User Card at Bottom -->
         <div class="sidebar-footer">
+          <!-- Theme Toggle -->
+          <button class="btn-theme" onclick="themeManager.toggle()" style="width:100%;margin-bottom:12px;justify-content:center;" title="切换主题">
+            <span class="theme-icon">☀️</span>
+            <span id="themeBtnText">切换浅色</span>
+          </button>
           <div class="user-card">
             <div class="user-avatar">👤</div>
             <div class="user-info">
@@ -1363,9 +1365,6 @@
               <p id="todayDate"></p>
             </div>
             <div class="header-actions">
-              <button class="btn-theme" onclick="themeManager.toggle()">
-                <span class="theme-icon" id="themeIconHeader">☀️</span>
-              </button>
               <button class="btn-sync" onclick="syncManager.sync()">
                 <span>↻</span> 同步
               </button>
@@ -1533,7 +1532,7 @@
           
           <div class="settings-card">
             <div class="settings-row">
-              <div class="slabel"><span>👤</span><span id="settingsUser">GitHub 未登录</span></div>
+              <div class="slabel"><span id="settingsUser">GitHub 未登录</span></div>
             </div>
             <div class="settings-row" onclick="syncManager.exportData()">
               <div class="slabel"><span>💾</span> 导出数据</div>

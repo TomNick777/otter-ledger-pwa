@@ -237,10 +237,14 @@ const githubAuth = {
     document.getElementById('app').classList.add('show');
     if (this.user) {
       document.getElementById('sidebarUserName').textContent = this.user.login;
-      document.getElementById('settingsUser').textContent = '👤 ' + this.user.login;
+      document.getElementById('settingsUser').textContent = 'GitHub: ' + this.user.login;
     }
     dataStore.init();
     ui.render();
+    // 确保主题按钮文字同步
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const themeBtn = document.getElementById('themeBtnText');
+    if (themeBtn) themeBtn.textContent = current === 'dark' ? '切换浅色' : '切换深色';
   },
 
   logout() {
@@ -275,6 +279,12 @@ const themeManager = {
     icons.forEach(icon => {
       icon.textContent = theme === 'dark' ? '☀️' : '🌙';
     });
+    
+    // Update theme button text
+    const themeBtn = document.getElementById('themeBtnText');
+    if (themeBtn) {
+      themeBtn.textContent = theme === 'dark' ? '切换浅色' : '切换深色';
+    }
     
     // Update meta theme-color
     const meta = document.getElementById('themeMeta');
