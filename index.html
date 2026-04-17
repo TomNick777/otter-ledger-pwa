@@ -1308,6 +1308,70 @@
     .fab button:hover {
       transform: scale(1.1);
     }
+
+    /* ===== RECORD TYPE TAGS ===== */
+    .record-type-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      border-radius: 4px;
+    }
+    .record-type-tag.type-income {
+      background: rgba(0,255,179,0.1);
+      color: var(--neon-cyan);
+      border: 1px solid rgba(0,255,179,0.3);
+    }
+    .record-type-tag.type-create {
+      background: rgba(0,212,255,0.1);
+      color: var(--neon-blue);
+      border: 1px solid rgba(0,212,255,0.3);
+    }
+    .record-type-tag.type-update {
+      background: rgba(255,230,0,0.1);
+      color: var(--neon-yellow);
+      border: 1px solid rgba(255,230,0,0.3);
+    }
+    .record-type-tag.type-delete {
+      background: rgba(255,46,99,0.1);
+      color: var(--neon-pink);
+      border: 1px solid rgba(255,46,99,0.3);
+    }
+
+    /* ===== DRAG SORT ===== */
+    .account-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+      transition: background 0.15s ease;
+      user-select: none;
+    }
+    .account-row:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    [data-theme="light"] .account-row:hover {
+      background: rgba(0,0,0,0.02);
+    }
+    .account-row:active {
+      cursor: grabbing;
+    }
+    .drag-handle {
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: grab;
+      padding: 4px;
+      letter-spacing: 2px;
+      flex-shrink: 0;
+    }
+    .drag-handle:hover {
+      color: var(--neon-cyan);
+    }
   </style>
 </head>
 <body>
@@ -1347,7 +1411,7 @@
             <span class="icon">▊</span> 数据概览
           </div>
           <div class="nav-item" onclick="pageManager.switchPage('records')">
-            <span class="icon">☰</span> 收支记录
+            <span class="icon">☰</span> 账户动态
             <span class="badge" id="recordBadge">0</span>
           </div>
           <div class="nav-item" onclick="pageManager.switchPage('accounts')">
@@ -1461,8 +1525,8 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">近期收支记录</div>
-                <div class="card-subtitle">最近20条记录</div>
+                <div class="card-title">近期账户动态</div>
+                <div class="card-subtitle">最近20条动态</div>
               </div>
               <div class="card-action" onclick="pageManager.switchPage('records')">查看全部 →</div>
             </div>
@@ -1471,8 +1535,8 @@
                 <tr>
                   <th>类型</th>
                   <th>描述</th>
-                  <th>账户</th>
-                  <th>日期</th>
+                  <th></th>
+                  <th>时间</th>
                   <th style="text-align:right">金额</th>
                 </tr>
               </thead>
@@ -1485,8 +1549,8 @@
         <div class="page" id="pageRecords">
           <div class="main-header">
             <div class="main-title">
-              <h2>☰ 收支记录</h2>
-              <p>所有收支明细一目了然</p>
+              <h2>☰ 账户动态</h2>
+              <p>账户新建、更新、收入登记一目了然</p>
             </div>
             <div class="header-actions">
               <button class="btn-add" onclick="pageManager.showAddModal()">
@@ -1598,7 +1662,7 @@
         <!-- Categories -->
         <div class="divider"></div>
         <div class="section-header">
-          <div class="section-title">☰ 支出分类</div>
+          <div class="section-title">☰ 收入分类</div>
         </div>
         <div id="categoryList"></div>
 
@@ -1625,7 +1689,6 @@
         <!-- Type Tabs -->
         <div class="type-tabs">
           <button class="type-tab active" id="tabIncome" onclick="pageManager.showAddType('income')">△ 收入</button>
-          <button class="type-tab expense" id="tabExpense" onclick="pageManager.showAddType('expense')">▽ 支出</button>
         </div>
 
         <form id="addForm" onsubmit="addManager.submit(event)">
@@ -1635,8 +1698,8 @@
             <input type="number" id="addAmount" step="0.01" placeholder="0.00" required>
           </div>
           <div class="form-group" id="sourceGroup">
-            <label>来源 / 说明</label>
-            <input type="text" id="addDesc" placeholder="工资、奖金、午餐..." required>
+            <label>来源</label>
+            <input type="text" id="addDesc" placeholder="工资、奖金、投资收益..." required>
           </div>
           <div class="form-group">
             <label>日期</label>
