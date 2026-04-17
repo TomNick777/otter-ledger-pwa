@@ -251,6 +251,39 @@ const githubAuth = {
   }
 };
 
+// ==================== 主题管理 ====================
+const themeManager = {
+  STORAGE_KEY: 'otter-theme',
+  
+  init() {
+    const saved = localStorage.getItem(this.STORAGE_KEY) || 'dark';
+    this.apply(saved);
+  },
+  
+  toggle() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    this.apply(next);
+    localStorage.setItem(this.STORAGE_KEY, next);
+  },
+  
+  apply(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    // Update all theme icons
+    const icons = document.querySelectorAll('.theme-icon');
+    icons.forEach(icon => {
+      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    });
+    
+    // Update meta theme-color
+    const meta = document.getElementById('themeMeta');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#0A0A0A' : '#FAFAFA');
+    }
+  }
+};
+
 // ==================== 同步管理 ====================
 const syncManager = {
   syncing: false,
@@ -823,6 +856,7 @@ const ui = {
 
 // ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', () => {
+  themeManager.init(); // 初始化主题
   dataStore.init();
   githubAuth.init();
   if ('serviceWorker' in navigator) {

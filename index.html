@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0A0A0A">
+  <meta name="theme-color" content="#0A0A0A" id="themeMeta">
   <title>海獭账本 | Otter Ledger</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Fonts: Clash Display + JetBrains Mono -->
+  <!-- Fonts: JetBrains Mono + Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,8 +16,9 @@
     /* ===== RESET ===== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     
-    :root {
-      /* Core Colors - Cyberpunk Palette */
+    /* ===== DARK THEME (default) ===== */
+    :root, [data-theme="dark"] {
+      /* Core Colors */
       --void: #0A0A0A;
       --void-light: #121212;
       --surface: #1A1A1A;
@@ -47,7 +48,54 @@
       --glow-cyan: 0 0 20px rgba(0,255,179,0.3), 0 0 40px rgba(0,255,179,0.1);
       --glow-pink: 0 0 20px rgba(255,46,99,0.3), 0 0 40px rgba(255,46,99,0.1);
       
-      /* Typography Scale */
+      /* Background Grid */
+      --grid-color: rgba(0,255,179,0.03);
+      
+      /* Modal Overlay */
+      --modal-bg: rgba(10,10,10,0.9);
+    }
+    
+    /* ===== LIGHT THEME ===== */
+    [data-theme="light"] {
+      /* Core Colors - Warm Paper */
+      --void: #FAFAFA;
+      --void-light: #FFFFFF;
+      --surface: #FFFFFF;
+      --surface-raised: #F5F5F5;
+      
+      /* Accents - Same neon for consistency */
+      --neon-cyan: #00B377;
+      --neon-pink: #E63959;
+      --neon-yellow: #FFB800;
+      --neon-blue: #0099CC;
+      
+      /* Functional */
+      --success: #00B377;
+      --danger: #E63959;
+      --warning: #FFB800;
+      
+      /* Text - Dark for contrast */
+      --text: #1A1A2E;
+      --text-dim: rgba(26,26,46,0.6);
+      --text-muted: rgba(26,26,46,0.4);
+      
+      /* Borders */
+      --border: rgba(26,26,46,0.08);
+      --border-bright: rgba(26,26,46,0.15);
+      
+      /* Glow Effects - Softer for light */
+      --glow-cyan: 0 2px 12px rgba(0,179,119,0.25);
+      --glow-pink: 0 2px 12px rgba(230,57,89,0.25);
+      
+      /* Background Grid - Subtle */
+      --grid-color: rgba(0,0,0,0.02);
+      
+      /* Modal Overlay */
+      --modal-bg: rgba(250,250,250,0.95);
+    }
+    
+    /* Typography Scale */
+    :root {
       --font-display: 'Plus Jakarta Sans', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
       
@@ -60,7 +108,7 @@
       --space-2xl: 48px;
       --space-3xl: 64px;
       
-      /* Border Radius - Hard edges */
+      /* Border Radius */
       --radius-none: 0;
       --radius-sm: 2px;
       --radius-md: 4px;
@@ -75,6 +123,7 @@
       color: var(--text);
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
+      transition: background 0.3s ease, color 0.3s ease;
     }
     
     /* Background Grid */
@@ -83,14 +132,14 @@
       position: fixed;
       inset: 0;
       background-image: 
-        linear-gradient(rgba(0,255,179,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,179,0.03) 1px, transparent 1px);
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
       background-size: 50px 50px;
       pointer-events: none;
       z-index: -2;
     }
     
-    /* Gradient Orbs */
+    /* Gradient Orbs - Hidden in light theme */
     body::after {
       content: '';
       position: fixed;
@@ -101,12 +150,17 @@
         radial-gradient(ellipse 30% 30% at 50% 50%, rgba(0,212,255,0.04) 0%, transparent 50%);
       pointer-events: none;
       z-index: -1;
+      opacity: 1;
+      transition: opacity 0.3s ease;
     }
     
-    /* Scanline Effect */
-    @keyframes scanline {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(100vh); }
+    [data-theme="light"] body::after {
+      opacity: 0;
+    }
+    
+    /* Light theme subtle gradient */
+    [data-theme="light"] body::before {
+      background-color: #FAFAFA;
     }
     
     /* ===== ANIMATIONS ===== */
@@ -136,15 +190,6 @@
     @keyframes float {
       0%, 100% { transform: translateY(0) rotate(0deg); }
       50% { transform: translateY(-10px) rotate(2deg); }
-    }
-    
-    @keyframes neonPulse {
-      0%, 100% { 
-        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
-      }
-      50% { 
-        text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
-      }
     }
     
     @keyframes modalIn {
@@ -225,6 +270,8 @@
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
+      background: var(--surface);
+      color: var(--text);
     }
     
     .btn::before {
@@ -244,7 +291,7 @@
     
     .btn-primary {
       background: var(--neon-cyan);
-      color: var(--void);
+      color: #0A0A0A;
       border-color: var(--neon-cyan);
     }
     
@@ -282,8 +329,31 @@
     
     .btn-danger:hover {
       background: var(--neon-pink);
-      color: var(--void);
+      color: #0A0A0A;
       box-shadow: var(--glow-pink);
+    }
+    
+    /* Theme Toggle Button */
+    .btn-theme {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .btn-theme:hover {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+    
+    .btn-theme .theme-icon {
+      font-size: 14px;
     }
     
     /* ===== APP LAYOUT ===== */
@@ -313,11 +383,15 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: background 0.3s ease;
     }
     
     .sidebar-header {
       padding: var(--space-xl);
       border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
     .logo-wrap {
@@ -344,43 +418,6 @@
       color: var(--neon-cyan);
       letter-spacing: 0.2em;
       text-transform: uppercase;
-    }
-    
-    /* User */
-    .sidebar-user {
-      padding: var(--space-lg);
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .user-card {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-    }
-    
-    .user-avatar {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      border: 1px solid var(--neon-cyan);
-    }
-    
-    .user-name {
-      font-family: var(--font-display);
-      font-size: 14px;
-      font-weight: 700;
-    }
-    
-    .user-plan {
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-top: 2px;
     }
     
     /* Nav */
@@ -418,10 +455,18 @@
       color: var(--text);
     }
     
+    [data-theme="light"] .nav-item:hover {
+      background: rgba(0,0,0,0.03);
+    }
+    
     .nav-item.active {
       background: rgba(0,255,179,0.05);
       color: var(--neon-cyan);
       border-left-color: var(--neon-cyan);
+    }
+    
+    [data-theme="light"] .nav-item.active {
+      background: rgba(0,179,119,0.08);
     }
     
     .nav-item .icon {
@@ -440,12 +485,53 @@
       font-family: var(--font-mono);
     }
     
-    /* Sidebar Footer */
+    /* Sidebar Footer - User Card at bottom */
     .sidebar-footer {
       padding: var(--space-lg);
       border-top: 1px solid var(--border);
+      margin-top: auto;
     }
     
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    .user-info { flex: 1; min-width: 0; }
+    
+    .user-name {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .user-plan {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    
+    /* Sync Status */
     .sync-status {
       display: flex;
       align-items: center;
@@ -453,6 +539,7 @@
       font-size: 11px;
       color: var(--text-dim);
       padding: var(--space-sm);
+      margin-top: var(--space-md);
     }
     
     .sync-dot {
@@ -471,6 +558,8 @@
       overflow-y: auto;
       padding: var(--space-2xl);
       position: relative;
+      background: var(--void);
+      transition: background 0.3s ease;
     }
     
     .main-content::-webkit-scrollbar {
@@ -542,7 +631,7 @@
       padding: var(--space-sm) var(--space-lg);
       background: var(--neon-cyan);
       border: 1px solid var(--neon-cyan);
-      color: var(--void);
+      color: #0A0A0A;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
@@ -568,7 +657,7 @@
       padding: var(--space-lg);
       position: relative;
       overflow: hidden;
-      transition: all 0.2s ease;
+      transition: all 0.2s ease, background 0.3s ease, border-color 0.3s ease;
     }
     
     .stat-card::before {
@@ -634,6 +723,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       margin-bottom: var(--space-lg);
+      transition: all 0.3s ease;
     }
     
     .card-header {
@@ -710,6 +800,10 @@
       background: rgba(255,255,255,0.02);
     }
     
+    [data-theme="light"] .records-table tr:hover td {
+      background: rgba(0,0,0,0.02);
+    }
+    
     .record-type {
       display: inline-flex;
       align-items: center;
@@ -747,6 +841,7 @@
       border-left: 1px solid var(--border);
       padding: var(--space-xl);
       overflow-y: auto;
+      transition: background 0.3s ease;
     }
     
     .section-header {
@@ -910,11 +1005,12 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(10,10,10,0.9);
+      background: var(--modal-bg);
       backdrop-filter: blur(10px);
       z-index: 200;
       align-items: center;
       justify-content: center;
+      transition: background 0.3s ease;
     }
     
     .modal.active { display: flex; }
@@ -1053,7 +1149,7 @@
     .type-tab.active {
       background: var(--neon-cyan);
       border-color: var(--neon-cyan);
-      color: var(--void);
+      color: #0A0A0A;
     }
     
     .type-tab.expense.active {
@@ -1103,6 +1199,8 @@
     .settings-row:last-child { border-bottom: none; }
     
     .settings-row:hover { background: rgba(255,255,255,0.02); }
+    
+    [data-theme="light"] .settings-row:hover { background: rgba(0,0,0,0.02); }
     
     .settings-row .slabel {
       display: flex;
@@ -1167,7 +1265,7 @@
       height: 56px;
       background: var(--neon-cyan);
       border: 1px solid var(--neon-cyan);
-      color: var(--void);
+      color: #0A0A0A;
       font-size: 24px;
       cursor: pointer;
       box-shadow: var(--glow-cyan);
@@ -1211,16 +1309,10 @@
               <div class="logo-sub">Otter Ledger</div>
             </div>
           </div>
-        </div>
-        
-        <div class="sidebar-user">
-          <div class="user-card">
-            <div class="user-avatar">👤</div>
-            <div class="user-info">
-              <div class="user-name" id="sidebarUserName">已登录</div>
-              <div class="user-plan">FREE TIER</div>
-            </div>
-          </div>
+          <!-- Theme Toggle -->
+          <button class="btn-theme" onclick="themeManager.toggle()" title="切换主题">
+            <span class="theme-icon" id="themeIcon">☀️</span>
+          </button>
         </div>
         
         <nav class="sidebar-nav">
@@ -1244,7 +1336,15 @@
           </div>
         </nav>
         
+        <!-- User Card at Bottom -->
         <div class="sidebar-footer">
+          <div class="user-card">
+            <div class="user-avatar">👤</div>
+            <div class="user-info">
+              <div class="user-name" id="sidebarUserName">已登录</div>
+              <div class="user-plan">FREE TIER</div>
+            </div>
+          </div>
           <div class="sync-status">
             <div class="sync-dot" id="syncDot"></div>
             <span id="syncStatusText">已同步</span>
@@ -1263,6 +1363,9 @@
               <p id="todayDate"></p>
             </div>
             <div class="header-actions">
+              <button class="btn-theme" onclick="themeManager.toggle()">
+                <span class="theme-icon" id="themeIconHeader">☀️</span>
+              </button>
               <button class="btn-sync" onclick="syncManager.sync()">
                 <span>↻</span> 同步
               </button>
