@@ -388,30 +388,40 @@ const syncManager = {
     if (this.syncing) return;
     this.syncing = true;
     ui.setSyncing(true);
+    console.log('=== SYNC START ===');
     try {
       const result = await this.pullFromGitHub();
+      console.log('Pull result:', result);
       // result: { data: cloudData, exists: boolean }
       
       if (result.exists && result.data && result.data.lastModified) {
         // 云端有数据，使用GitHub优先策略
+        console.log('Cloud data found, merging...');
         const localData = dataStore.export();
+        console.log('Local data:', localData);
         const merged = this.mergeData(localData, result.data);
+        console.log('Merged data:', merged);
         dataStore.import(merged);
         await this.pushToGitHub(merged, `Sync ${new Date().toLocaleString('zh-CN')}`);
       } else if (result.exists === false) {
         // 云端确实没有数据（404），推送本地数据
+        console.log('No cloud data (404), pushing local...');
         const localData = dataStore.export();
+        console.log('Local data to push:', localData);
         if (localData.accounts && localData.accounts.length > 0) {
           await this.pushToGitHub(localData, 'Initial data from local');
         }
       } else {
         // 拉取失败（网络错误等），不推送，避免覆盖云端数据
-        console.log('Sync: pull failed, skipping push to avoid overwriting cloud data');
+        console.log('Sync: pull failed (network error), skipping push');
+        ui.showToast('网络问题，同步暂停');
       }
       ui.render();
       ui.showToast('同步完成 ✓');
+      console.log('=== SYNC DONE ===');
     } catch (err) {
-      ui.showToast('同步失败');
+      console.error('Sync error:', err);
+      ui.showToast('同步失败: ' + err.message);
       throw err;
     }
     finally { this.syncing = false; ui.setSyncing(false); }
