@@ -241,10 +241,10 @@ const githubAuth = {
     }
     dataStore.init();
     ui.render();
-    // 确保主题按钮文字同步
+    // 确保主题开关图标同步
     const current = document.documentElement.getAttribute('data-theme') || 'dark';
-    const themeBtn = document.getElementById('themeBtnText');
-    if (themeBtn) themeBtn.textContent = current === 'dark' ? '切换浅色' : '切换深色';
+    const switchIcon = document.getElementById('themeSwitchIcon');
+    if (switchIcon) switchIcon.textContent = current === 'dark' ? '☀️' : '🌙';
   },
 
   logout() {
@@ -280,10 +280,10 @@ const themeManager = {
       icon.textContent = theme === 'dark' ? '☀️' : '🌙';
     });
     
-    // Update theme button text
-    const themeBtn = document.getElementById('themeBtnText');
-    if (themeBtn) {
-      themeBtn.textContent = theme === 'dark' ? '切换浅色' : '切换深色';
+    // Update theme switch icon
+    const switchIcon = document.getElementById('themeSwitchIcon');
+    if (switchIcon) {
+      switchIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
     }
     
     // Update meta theme-color
