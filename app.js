@@ -263,10 +263,12 @@ const githubAuth = {
   token: null,
   user: null,
 
-  init() {
+  async init() {
     this.token = localStorage.getItem('github-token');
     this.user = JSON.parse(localStorage.getItem('github-user') || 'null');
-    if (this.token && this.user) this.showApp();
+    if (this.token && this.user) {
+      await this.showApp();
+    }
   },
 
   login() {
@@ -289,13 +291,12 @@ const githubAuth = {
       document.getElementById('tokenModal').style.display = 'none';
       document.getElementById('tokenInput').value = '';
       ui.showToast('登录成功！欢迎 ' + this.user.login);
-      this.showApp();
-      await syncManager.initRepo();
-      await syncManager.sync();
+      // showApp 内部会处理初始化和同步
+      await this.showApp();
     } catch (err) { ui.showToast('登录失败：' + err.message); }
   },
 
-  showApp() {
+  async showApp() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('app').classList.add('show');
     if (this.user) {
@@ -304,7 +305,7 @@ const githubAuth = {
     }
     dataStore.init();
     // 先等 GitHub 数据拉回来再渲染，避免新设备看到空白
-    this._renderAfterSync();
+    await this._renderAfterSync();
   },
 
   async _renderAfterSync() {
@@ -1075,10 +1076,10 @@ const ui = {
 };
 
 // ==================== 初始化 ====================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   themeManager.init();
   dataStore.init();
-  githubAuth.init();
+  await githubAuth.init();
   if ('serviceWorker' in navigator) {
     const base = window.location.pathname.replace(/\/[^\/]*$/, '');
     navigator.serviceWorker.register(base + '/sw.js').catch(console.error);
