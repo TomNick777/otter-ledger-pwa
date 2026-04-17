@@ -193,6 +193,7 @@ const dataStore = {
       incomeRecords: this.incomeRecords,
       transferRecords: this.transferRecords,
       expenses: this.expenses,
+      lastModified: Date.now(),
       exportTime: new Date().toISOString()
     };
   },
@@ -527,6 +528,7 @@ const accountManager = {
     document.getElementById('newAccountInitialBalance').value = '0';
     pageManager.hideModal('accountModal');
     ui.render();
+    addManager.initAccount(); // 更新账户选择下拉框
     if (githubAuth.token) syncManager.sync();
   },
 
@@ -603,16 +605,23 @@ const ui = {
     const balance = dataStore.getTotalBalance();
     const balance2 = income - expense;
 
-    document.getElementById('statTotal').textContent = '¥' + balance.toFixed(2);
-    document.getElementById('statIncome').textContent = '+¥' + income.toFixed(2);
-    document.getElementById('statExpense').textContent = '-¥' + expense.toFixed(2);
-    document.getElementById('statBalance').textContent = (balance2 >= 0 ? '+' : '') + '¥' + balance2.toFixed(2);
+    const setIfExists = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
 
-    // Sub texts
-    document.getElementById('statIncomeSub').textContent = `${now.getMonth() + 1}月收入`;
-    document.getElementById('statExpenseSub').textContent = `${now.getMonth() + 1}月支出`;
-    document.getElementById('statBalanceSub').textContent = balance2 >= 0 ? '本月盈利' : '本月亏损';
-    document.getElementById('statBalance').className = 'value ' + (balance2 >= 0 ? 'savings' : 'expense');
+    setIfExists('statTotal', '¥' + balance.toFixed(2));
+    setIfExists('statIncome', '+¥' + income.toFixed(2));
+    setIfExists('statExpense', '-¥' + expense.toFixed(2));
+    setIfExists('statBalance', (balance2 >= 0 ? '+' : '') + '¥' + balance2.toFixed(2));
+
+    // Sub texts (optional elements, may not exist in all layouts)
+    setIfExists('statIncomeSub', `${now.getMonth() + 1}月收入`);
+    setIfExists('statExpenseSub', `${now.getMonth() + 1}月支出`);
+    setIfExists('statBalanceSub', balance2 >= 0 ? '本月盈利' : '本月亏损');
+
+    const statBalance = document.getElementById('statBalance');
+    if (statBalance) statBalance.className = 'value ' + (balance2 >= 0 ? 'savings' : 'expense');
   },
 
   renderSidebarAccounts() {
