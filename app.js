@@ -389,24 +389,30 @@ const syncManager = {
     this.syncing = true;
     ui.setSyncing(true);
     try {
-      const cloudData = await this.pullFromGitHub();
-      if (cloudData && cloudData.lastModified) {
+      const result = await this.pullFromGitHub();
+      // result: { data: cloudData, exists: boolean }
+      
+      if (result.exists && result.data && result.data.lastModified) {
+        // 云端有数据，使用GitHub优先策略
         const localData = dataStore.export();
-        const merged = this.mergeData(localData, cloudData);
+        const merged = this.mergeData(localData, result.data);
         dataStore.import(merged);
         await this.pushToGitHub(merged, `Sync ${new Date().toLocaleString('zh-CN')}`);
-      } else if (cloudData === null) {
-        // 云端无数据，推送本地数据（如果有）
+      } else if (result.exists === false) {
+        // 云端确实没有数据（404），推送本地数据
         const localData = dataStore.export();
         if (localData.accounts && localData.accounts.length > 0) {
           await this.pushToGitHub(localData, 'Initial data from local');
         }
+      } else {
+        // 拉取失败（网络错误等），不推送，避免覆盖云端数据
+        console.log('Sync: pull failed, skipping push to avoid overwriting cloud data');
       }
       ui.render();
       ui.showToast('同步完成 ✓');
     } catch (err) {
       ui.showToast('同步失败');
-      throw err; // 让上层知道失败了
+      throw err;
     }
     finally { this.syncing = false; ui.setSyncing(false); }
   },
@@ -416,10 +422,11 @@ const syncManager = {
       const res = await fetch(`https://api.github.com/repos/${githubAuth.user.login}/${CONFIG.REPO_NAME}/contents/${CONFIG.DATA_FILE}`, {
         headers: { 'Authorization': `token ${githubAuth.token}` }
       });
-      if (res.status === 404) return null;
+      if (res.status === 404) return { exists: false, data: null };
+      if (!res.ok) return { exists: null, data: null }; // 网络错误，不明确状态
       const file = await res.json();
-      return JSON.parse(atob(file.content));
-    } catch (err) { return null; }
+      return { exists: true, data: JSON.parse(atob(file.content)) };
+    } catch (err) { return { exists: null, data: null }; }
   },
 
   async pushToGitHub(data, message) {
@@ -441,11 +448,26 @@ const syncManager = {
   },
 
   mergeData(local, cloud) {
-    // GitHub 优先：本地仅作离线备用
+    // GitHub 优先策略：除非本地数据明显更新，否则使用云端数据
     if (!cloud || !cloud.accounts) return local;
     if (!local || !local.accounts || local.accounts.length === 0) return cloud;
-    // 双方都有数据时取较新的
-    return (cloud.lastModified || 0) >= (local.lastModified || 0) ? cloud : local;
+    
+    // 云端数据比本地新或相等，使用云端
+    if ((cloud.lastModified || 0) >= (local.lastModified || 0)) {
+      console.log('Sync: using cloud data (newer or equal)');
+      return cloud;
+    }
+    
+    // 本地数据比云端新超过5分钟，可能是本设备刚修改的，使用本地
+    const timeDiff = (local.lastModified || 0) - (cloud.lastModified || 0);
+    if (timeDiff > 5 * 60 * 1000) {
+      console.log('Sync: using local data (significantly newer)');
+      return local;
+    }
+    
+    // 时间差在5分钟内，优先使用云端避免冲突
+    console.log('Sync: using cloud data (small time diff, prefer cloud)');
+    return cloud;
   },
 
   exportData() {
