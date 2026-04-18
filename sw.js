@@ -1,4 +1,4 @@
-const CACHE_NAME = 'otter-ledger-v10';
+const CACHE_NAME = 'otter-ledger-v11';
 const BASE_URL = self.location.pathname.replace(/\/sw\.js$/, '');
 
 const urlsToCache = [

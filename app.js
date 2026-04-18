@@ -263,7 +263,7 @@ const dataStore = {
       incomeRecords: this.incomeRecords,
       transferRecords: this.transferRecords,
       activityLog: this.activityLog,
-      lastModified: this.lastModified || Date.now()
+      lastModified: this.lastModified
     };
   },
 
