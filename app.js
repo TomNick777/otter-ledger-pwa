@@ -317,8 +317,8 @@ const githubAuth = {
       document.getElementById('sidebarUserName').textContent = this.user.login;
       document.getElementById('settingsUser').textContent = 'GitHub: ' + this.user.login;
     }
-    // 登录状态：跳过本地缓存，直接从 GitHub 拉取最新数据
-    dataStore.init(true);
+    // 先加载本地数据（可能比云端新），再同步
+    dataStore.init(false);  // 加载本地缓存
     await this._renderAfterSync();
   },
 
