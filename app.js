@@ -23,6 +23,8 @@ const dataStore = {
   transferRecords: [],
   // 账户动态日志
   activityLog: [],
+  // 最后修改时间戳
+  lastModified: 0,
 
   init(skipLocal = false) {
     this.accounts = [];
@@ -30,6 +32,7 @@ const dataStore = {
     this.incomeRecords = [];
     this.transferRecords = [];
     this.activityLog = [];
+    this.lastModified = 0;
     if (!skipLocal) {
       const saved = localStorage.getItem('otter-ledger-data');
       if (saved) {
@@ -39,6 +42,7 @@ const dataStore = {
         this.incomeRecords = data.incomeRecords || [];
         this.transferRecords = data.transferRecords || [];
         this.activityLog = data.activityLog || [];
+        this.lastModified = data.lastModified || 0;
       }
     }
     // 确保所有账户有 sortOrder
@@ -48,14 +52,15 @@ const dataStore = {
     this.accounts.sort((a, b) => a.sortOrder - b.sortOrder);
   },
 
-  save() {
+  save(updateTimestamp = true) {
+    if (updateTimestamp) this.lastModified = Date.now();
     localStorage.setItem('otter-ledger-data', JSON.stringify({
       accounts: this.accounts,
       balanceSnapshots: this.balanceSnapshots,
       incomeRecords: this.incomeRecords,
       transferRecords: this.transferRecords,
       activityLog: this.activityLog,
-      lastModified: Date.now()
+      lastModified: this.lastModified
     }));
     // 自动同步到云端
     if (typeof syncManager !== 'undefined' && syncManager.sync && githubAuth.token) {
@@ -258,7 +263,7 @@ const dataStore = {
       incomeRecords: this.incomeRecords,
       transferRecords: this.transferRecords,
       activityLog: this.activityLog,
-      lastModified: Date.now()
+      lastModified: this.lastModified || Date.now()
     };
   },
 
@@ -268,7 +273,8 @@ const dataStore = {
     if (data.incomeRecords) this.incomeRecords = data.incomeRecords;
     if (data.transferRecords) this.transferRecords = data.transferRecords;
     if (data.activityLog) this.activityLog = data.activityLog;
-    this.save();
+    if (data.lastModified) this.lastModified = data.lastModified;
+    this.save(false);  // 保存但不更新时间戳
   }
 };
 
